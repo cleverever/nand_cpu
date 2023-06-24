@@ -3,48 +3,13 @@ logic [`DATA_WIDTH - 1 : 0] ra;
 logic [`DATA_WIDTH - 1 : 0] rt;
 logic ps;
 
-modport in
-(
-    input ra, rt, ps
-);
-modport out
+modport regfile
 (
     output ra, rt, ps
 );
-endinterface
-
-interface regfile_read_ifc;
-logic ra_read;
-logic rt_read;
-logic [$clog2(`DATA_WIDTH) - 1 : 0] rt_addr;
-
-logic ps_read;
-
-modport in
+modport alu
 (
-    input ra_read, rt_read, rt_addr, ps_read
-);
-modport out
-(
-    output ra_read, rt_read, rt_addr, ps_read
-);
-endinterface
-
-interface regfile_write_ifc;
-logic write;
-logic [`DATA_WIDTH - 1 : 0] rw;
-logic [$clog2(`DATA_WIDTH) - 1 : 0] rw_addr;
-
-logic ps_write;
-logic ps;
-
-modport in
-(
-    input write, rw, rw_addr, ps_write, ps
-);
-modport out
-(
-    output write, rw, rw_addr, ps_write, ps
+    input ra, rt
 );
 endinterface
 
@@ -53,33 +18,43 @@ module regfile
     input logic clk,
     input logic n_rst,
 
-    regfile_write_ifc.in i_reg_write,
+    writeback_ifc.in i_writeback,
+    decoder_output_ifc.regfile i_reg_read,
 
-    regfile_read_ifc.in i_reg_read,
-    regfile_output_ifc.out out
+    regfile_output_ifc.regfile out
 );
 
-logic [`DATA_WIDTH - 1 : 0] regs [`NUM_REG];
+logic [`DATA_WIDTH - 1 : 0] regs [16];
 logic ps_reg;
 
 always_comb begin
-    if(i_reg_read.ra_read) begin
-        out.ra = regs[0];
-    end
-    if(i_reg_read.rt_read) begin
-        out.rt = regs[i_reg_read.rt_addr];
-    end
-    if(i_reg_read.ps_read) begin
-        out.ps = ps_reg;
+    if(i_reg_read.valid) begin
+        if(i_reg_read.use_ra) begin
+            out.ra = regs[0];
+        end
+        if(i_reg_read.use_rt) begin
+            out.rt = regs[i_reg_read.rt_addr];
+        end
+        if(i_reg_read.read_ps) begin
+            out.ps = ps_reg;
+        end
     end
 end
 
 always_ff @(posedge clk) begin
-    if(i_reg_write.write) begin
-        regs[i_reg_write.rw_addr] <= i_reg_write.rw;
+    if(~n_rst) begin
+        regs <= '{default:'0};
+        ps_reg <= 1'b0;
     end
-    if(i_reg_write.ps_write) begin
-        ps_reg <= i_reg_write.ps;
+    else begin
+        if(i_writeback.valid) begin
+            if(i_writeback.use_rw) begin
+                regs[i_writeback.rw_addr] <= i_writeback.data;
+            end
+            if(i_writeback.write_ps) begin
+                ps_reg <= i_writeback.ps;
+            end
+        end
     end
 end
 endmodule
