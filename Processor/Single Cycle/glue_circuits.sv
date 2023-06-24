@@ -1,31 +1,43 @@
 module alu_glue_circuit
 (
-    decoded_instr.in decoded,
-    regfile_ifc.in reg_data,
-    
-    alu_input.out alu_in
+    decoder_output_ifc.alu i_decoder,
+    regfile_output_ifc.alu i_regfile,
+
+    alu_input_ifc.out out,
 );
 
 always_comb begin
-    if(decoded.alu_op == ALU_LI) begin
-        case(decoded.shift)
-            2'b00 : begin
-                alu_in.op0 = reg_data.acc & 16'b1111111111110000;
-            end
-            2'b01 : begin
-                alu_in.op0 = reg_data.acc & 16'b1111111100001111;
-            end
-            2'b10 : begin
-                alu_in.op0 = reg_data.acc & 16'b1111000011111111;
-            end
-            2'b1 : begin
-                alu_in.op0 = reg_data.acc & 16'b0000111111111111;
-            end
-        endcase
-    end
-    else begin
-        alu_in.op0 = reg_data.acc;
-    end
+    out.op0 = i_regfile.ra;
+    out.op1 = i_decoder.use_immdt? {10'b0000000000, i_decoder.shift, i_decoder.immdt};
+    out.alu_op = i_decoder.alu_op;
+end
+endmodule
 
+interface writeback_ifc;
+logic valid;
+logic use_rw;
+logic rw_addr;
+logic data;
+logic write_ps;
+logic ps;
+
+modport in
+(
+    input valid, use_rw, rw_addr, data, write_ps, ps
+);
+modport out
+(
+    output valid, use_rw, rw_addr, data, write_ps, ps
+);
+endinterface
+
+module writeback_glue_circuit
+(
+    //TEMP
+
+    writeback_ifc.out out,
+);
+
+always_comb begin
 end
 endmodule
