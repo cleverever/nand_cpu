@@ -1,4 +1,4 @@
-interface decoded;
+interface decoded_instr;
 logic read_a;
 logic write_a;
 
@@ -7,8 +7,8 @@ logic write_r;
 logic [$clog2(`NUM_REG) - 1 : 0] r;
 
 logic use_immdt;
-logic [3 : 0] immdt4;
-logic [5 : 0] immdt6;
+logic [3 : 0] immdt;
+logic [5 : 4] shift;
 
 logic interrupt;
 logic halt;
@@ -31,11 +31,10 @@ module decoder
     decoded.out out
 );
 
-
 always_comb begin
     out.r = instr[3 : 0];
-    out.immdt4 = instr[3 : 0];
-    out.immdt6 = instr[5 : 0];
+    out.immdt = instr[3 : 0];
+    out.shift = instr[5 : 4];
     out.interrupt = instr[7 : 4] == 4'b1110;
     out.halt = instr[7 : 4] == 4'b1111;
     priority casez(instr)
@@ -61,7 +60,7 @@ always_comb begin
             out.read_r = 1'b1;
             out.write_r = 1'b0;
             use_immdt = 1'b0;
-            alu_op = ALU_NND;
+            alu_op = ALU_NAND;
         end
         8'b0010???? : begin //LS
             out.read_a = 1'b1;
