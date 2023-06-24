@@ -5,11 +5,13 @@ module nand_cpu
 );
 
 logic [7 : 0] instr;
-decoded_instr decoder_output();
+decoder_output_ifc decoder_output();
 
 regfile_output_ifc reg_data();
-regfile_read_ifc read_request();
-regfile_write_ifc write_request();
+
+alu_input_ifc alu_input();
+
+writeback_ifc writeback();
 
 
 //FETCH
@@ -20,26 +22,39 @@ decoder DECODER
     .out(decoder_output)
 );
 
-alu_glue_circuit REGFILE_GLUE
-(
-
-);
-
 regfile REGFILE
 (
     .clk(clk),
     .n_rst(n_rst),
 
-    .i_reg_write(write_request),
+    .i_writeback(writeback),
+    .i_reg_read(decoder_output),
 
-    .i_reg_read(read_request),
     .out(reg_data)
 );
 
 alu_glue_circuit ALU_GLUE
 (
+    .i_decoder(decoder_output),
+    .i_regfile(reg_data),
 
+    .out(alu_input)
 );
 
+alu ALU
+(
+    .in(alu_input),
+
+    .result()
+);
+
+//MEM
+
+writeback_glue_circuit WRITEBACK_GLUE
+(
+    //TEMP
+
+    .out(writeback)
+);
 
 endmodule
