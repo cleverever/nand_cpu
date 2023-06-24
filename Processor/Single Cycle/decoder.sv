@@ -16,6 +16,9 @@ logic use_immdt;
 logic [3 : 0] immdt;
 logic [5 : 4] shift;
 
+logic mem_access;
+nand_cpu_pkg::MEM_OP mem_op;
+
 logic jump;
 logic branch;
 
@@ -26,8 +29,8 @@ nand_cpu_pkg::ALU_OP alu_op;
 
 modport decoder
 (
-    output valid, use_ra, use_rt, rt_addr, use_rw, rw_addr, read_ps,
-    write_ps, use_immdt, immdt, shift, jump, branch, interrupt, halt
+    output valid, use_ra, use_rt, rt_addr, use_rw, rw_addr, read_ps, write_ps,
+    use_immdt, immdt, shift, mem_access, mem_op, jump, branch, interrupt, halt
 );
 modport regfile
 (
@@ -55,6 +58,7 @@ always_comb begin
     write_ps = 1'b0;
     out.immdt = instr[3 : 0];
     out.shift = instr[5 : 4];
+    mem_access = 1'b0;
     out.jump = 1'b0;
     out.branch = 1'b0;
     out.interrupt = 1'b0;
@@ -140,12 +144,16 @@ always_comb begin
             out.use_rt = 1'b1;
             out.use_rw = 1'b1;
             use_immdt = 1'b0;
+            mem_access = 1'b1;
+            mem_op = READ;
         end
         8'b1101???? : begin //ST
             out.use_ra = 1'b1;
             out.use_rt = 1'b1;
             out.use_rw = 1'b0;
             use_immdt = 1'b0;
+            mem_access = 1'b1;
+            mem_op = WRITE;
         end
         8'b1110???? : begin //INT
             out.use_ra = 1'b0;

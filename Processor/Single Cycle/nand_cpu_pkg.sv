@@ -1,5 +1,5 @@
 package nand_cpu_pkg;
-    typedef enum logic [4:0]
+    typedef enum logic [2 : 0]
     {
         ALU_CL,
         ALU_CP,
@@ -10,5 +10,12 @@ package nand_cpu_pkg;
         ALU_NE,
         ALU_LI
     }
-    ALUOP;
+    ALU_OP;
+
+    typedef enum logic
+    {
+        READ,
+        WRITE
+    }
+    MEM_OP;
 endpackage
