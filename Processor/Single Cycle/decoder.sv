@@ -44,6 +44,10 @@ modport branch_controller
 (
     input valid, jump, branch
 );
+modport fetch_unit
+(
+    interrupt, halt
+);
 endinterface
 
 module decoder

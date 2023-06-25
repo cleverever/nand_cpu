@@ -1,8 +1,11 @@
 module nand_cpu
 (
     input logic clk,
-    input logic n_rst
+    input logic n_rst,
+
+    output logic halt
 );
+
 branch_controller_ifc branch_controller();
 
 logic unsigned [`PC_SIZE - 1 : 0] pc;
@@ -32,10 +35,13 @@ fetch_unit FETCH_UNIT
     .clk(clk),
     .n_rst(n_rst),
 
+    .interrupt_handler(),
+
     .i_branch_controller(branch_controller),
     .i_decoder(decoder_output),
 
-    .pc(pc)
+    .pc(pc),
+    .halted(halt)
 );
 
 i_mem I_MEM
