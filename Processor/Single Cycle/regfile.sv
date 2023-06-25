@@ -11,6 +11,10 @@ modport alu
 (
     input ra, rt
 );
+modport branch_controller
+(
+    input ps, rt
+);
 endinterface
 
 module regfile
