@@ -14,6 +14,9 @@ regfile_output_ifc reg_data();
 
 alu_input_ifc alu_input();
 
+logic [15 : 0] alu_data;
+logic [15 : 0] mem_data;
+
 writeback_ifc writeback();
 
 branch_controller BRANCH_CONTROLLER
@@ -71,19 +74,27 @@ alu ALU
 (
     .in(alu_input),
 
-    .result()
+    .result(alu_data)
 );
 
 d_mem D_MEM
 (
-    //TEMP
+    .clk(clk),
+    .n_rst(n_rst),
+
+    .i_decoder(decoder_output),
+    .i_regfile(reg_data),
+
+    .data(mem_data)
 );
 
 writeback_glue_circuit WRITEBACK_GLUE
 (
-    //TEMP
+    .alu_data(alu_data),
+    .mem_data(mem_data),
+
+    .decoder_output_ifc(decoder_output),
 
     .out(writeback)
 );
-
 endmodule
