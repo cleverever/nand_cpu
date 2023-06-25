@@ -15,6 +15,10 @@ modport branch_controller
 (
     input ps, rt
 );
+modport d_mem
+(
+    input ra, rt
+);
 endinterface
 
 module regfile
