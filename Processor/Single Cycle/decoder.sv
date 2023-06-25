@@ -40,6 +40,10 @@ modport alu
 (
     input use_immdt, immdt, shift
 );
+modport branch_controller
+(
+    input valid, jump, branch
+);
 endinterface
 
 module decoder
