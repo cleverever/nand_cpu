@@ -18,8 +18,8 @@ endmodule
 interface writeback_ifc;
 logic valid;
 logic use_rw;
-logic rw_addr;
-logic data;
+logic [3 : 0] rw_addr;
+logic [15 : 0] data;
 logic write_ps;
 logic ps;
 
