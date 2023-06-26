@@ -15,12 +15,12 @@ logic [7 : 0] core [(2 ** 16) - 1];
 
 always_ff @(posedge clk) begin
     if(~n_rst) begin
-        core[i_regfile.rt + 1] = i_regfile.ra[15 : 8];
-        core[i_regfile.rt] = i_regfile.ra[7 : 0];
+        core <= {default:'0};
     end
     else begin
         if(i_decoder.valid & i_decoder.mem_access & i_decoder.mem_op == WRITE) begin
-            data[]
+            core[i_regfile.rt + 1] = i_regfile.ra[15 : 8];
+            core[i_regfile.rt] = i_regfile.ra[7 : 0];
         end
     end
 end
