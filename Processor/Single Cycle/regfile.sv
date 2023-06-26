@@ -1,8 +1,8 @@
 `include "nand_cpu.svh"
 
 interface regfile_output_ifc;
-logic [`DATA_WIDTH - 1 : 0] ra;
-logic [`DATA_WIDTH - 1 : 0] rt;
+logic [15 : 0] ra;
+logic [15 : 0] rt;
 logic ps;
 
 modport regfile
@@ -34,7 +34,7 @@ module regfile
     regfile_output_ifc.regfile out
 );
 
-logic [`DATA_WIDTH - 1 : 0] regs [16];
+logic [15 : 0] regs [16];
 logic ps_reg;
 
 always_comb begin
