@@ -48,7 +48,7 @@ modport branch_controller
 );
 modport fetch_unit
 (
-    interrupt, halt
+    input interrupt, halt
 );
 endinterface
 
@@ -64,11 +64,11 @@ always_comb begin
     out.valid = valid;
     out.rt_addr = instr[3 : 0];
     out.rw_addr = 4'b0000;
-    read_ps = 1'b0;
-    write_ps = 1'b0;
+    out.read_ps = 1'b0;
+    out.write_ps = 1'b0;
     out.immdt = instr[3 : 0];
     out.shift = instr[5 : 4];
-    mem_access = 1'b0;
+    out.mem_access = 1'b0;
     out.jump = 1'b0;
     out.branch = 1'b0;
     out.interrupt = 1'b0;
@@ -78,60 +78,60 @@ always_comb begin
             out.use_ra = 1'b0;
             out.use_rt = 1'b0;
             out.use_rw = 1'b1;
-            use_immdt = 1'b0;
-            alu_op = ALU_CLR;
+            out.use_immdt = 1'b0;
+            out.alu_op = ALU_CL;
         end
         8'b0000???? : begin //CP
             out.use_ra = 1'b1;
             out.use_rt = 1'b0;
             out.use_rw = 1'b1;
             out.rw_addr = instr[3 : 0];
-            use_immdt = 1'b0;
-            alu_op = ALU_CP;
+            out.use_immdt = 1'b0;
+            out.alu_op = ALU_CP;
         end
         8'b0001???? : begin //NND
             out.use_ra = 1'b1;
             out.use_rt = 1'b1;
             out.use_rw = 1'b1;
-            use_immdt = 1'b0;
-            alu_op = ALU_NAND;
+            out.use_immdt = 1'b0;
+            out.alu_op = ALU_NAND;
         end
         8'b0010???? : begin //LS
             out.use_ra = 1'b1;
             out.use_rt = 1'b1;
             out.use_rw = 1'b1;
-            use_immdt = 1'b0;
-            alu_op = ALU_LS;
+            out.use_immdt = 1'b0;
+            out.alu_op = ALU_LS;
         end
         8'b0011???? : begin //RS
             out.use_ra = 1'b1;
             out.use_rt = 1'b1;
             out.use_rw = 1'b1;
-            use_immdt = 1'b0;
-            alu_op = ALU_RS;
+            out.use_immdt = 1'b0;
+            out.alu_op = ALU_RS;
         end
         8'b0100???? : begin //EQ
             out.use_ra = 1'b1;
             out.use_rt = 1'b1;
             out.use_rw = 1'b0;
-            write_ps = 1'b1;
-            use_immdt = 1'b0;
-            alu_op = ALU_EQ;
+            out.write_ps = 1'b1;
+            out.use_immdt = 1'b0;
+            out.alu_op = ALU_EQ;
         end
         8'b0101???? : begin //NE
             out.use_ra = 1'b1;
             out.use_rt = 1'b1;
             out.use_rw = 1'b0;
-            write_ps = 1'b1;
-            use_immdt = 1'b0;
-            alu_op = ALU_NE;
+            out.write_ps = 1'b1;
+            out.use_immdt = 1'b0;
+            out.alu_op = ALU_NE;
         end
         8'b0110???? : begin //BR
             out.use_ra = 1'b0;
             out.use_rt = 1'b1;
             out.use_rw = 1'b0;
-            read_ps = 1'b1;
-            use_immdt = 1'b0;
+            out.read_ps = 1'b1;
+            out.use_immdt = 1'b0;
             out.branch = 1'b1;
         end
         8'b0111???? : begin //JRL
@@ -139,44 +139,44 @@ always_comb begin
             out.use_rt = 1'b1;
             out.use_rw = 1'b1;
             out.rw_addr = instr[3 : 0];
-            use_immdt = 1'b0;
+            out.use_immdt = 1'b0;
             out.jump = 1'b1;
         end
         8'b10?????? : begin //LI
             out.use_ra = 1'b1;
             out.use_rt = 1'b0;
             out.use_rw = 1'b1;
-            use_immdt = 1'b1;
-            alu_op = ALU_LI;
+            out.use_immdt = 1'b1;
+            out.alu_op = ALU_LI;
         end
         8'b1100???? : begin //LD
             out.use_ra = 1'b0;
             out.use_rt = 1'b1;
             out.use_rw = 1'b1;
-            use_immdt = 1'b0;
-            mem_access = 1'b1;
-            mem_op = READ;
+            out.use_immdt = 1'b0;
+            out.mem_access = 1'b1;
+            out.mem_op = READ;
         end
         8'b1101???? : begin //ST
             out.use_ra = 1'b1;
             out.use_rt = 1'b1;
             out.use_rw = 1'b0;
-            use_immdt = 1'b0;
-            mem_access = 1'b1;
-            mem_op = WRITE;
+            out.use_immdt = 1'b0;
+            out.mem_access = 1'b1;
+            out.mem_op = WRITE;
         end
         8'b1110???? : begin //INT
             out.use_ra = 1'b0;
             out.use_rt = 1'b0;
             out.use_rw = 1'b0;
-            use_immdt = 1'b1;
+            out.use_immdt = 1'b1;
             out.interrupt = 1'b1;
         end
         8'b1111???? : begin //HLT
             out.use_ra = 1'b0;
             out.use_rt = 1'b0;
             out.use_rw = 1'b0;
-            use_immdt = 1'b1;
+            out.use_immdt = 1'b1;
             out.halt = 1'b1;
         end
     endcase
