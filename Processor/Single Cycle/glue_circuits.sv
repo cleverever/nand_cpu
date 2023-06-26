@@ -35,8 +35,8 @@ endinterface
 
 module writeback_glue_circuit
 (
-    logic [15 : 0] alu_data,
-    logic [15 : 0] mem_data,
+    input logic [15 : 0] alu_data,
+    input logic [15 : 0] mem_data,
 
     decoder_output_ifc.writeback i_decoder,
 
@@ -47,8 +47,8 @@ always_comb begin
     out.valid = i_decoder.valid;
     out.use_rw = i_decoder.use_rw;
     out.rw_addr = i_decoder.rw_addr;
-    out.data = i_decoder.mem_access? mem_data : alu_data;
-    out.write_ps = i_decoder.write_ps;
     out.ps = alu_data[0];
+    out.write_ps = i_decoder.write_ps;
+    out.data = i_decoder.mem_access? mem_data : alu_data;
 end
 endmodule

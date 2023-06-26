@@ -7,7 +7,7 @@ module fetch_unit
 
     input logic unsigned [`PC_SIZE - 1 : 0] interrupt_handler [15],
 
-    branch_controller_ifc.fetch_unit i_branch_controller,
+    branch_controller_ifc.in i_branch_controller,
     decoder_output_ifc.fetch_unit i_decoder,
 
     output logic unsigned [`PC_SIZE - 1 : 0] pc,

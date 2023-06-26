@@ -32,7 +32,7 @@ nand_cpu_pkg::ALU_OP alu_op;
 modport decoder
 (
     output valid, use_ra, use_rt, rt_addr, use_rw, rw_addr, read_ps, write_ps,
-    use_immdt, immdt, shift, mem_access, mem_op, jump, branch, interrupt, halt
+    use_immdt, immdt, shift, mem_access, mem_op, jump, branch, interrupt, halt, alu_op
 );
 modport regfile
 (
@@ -40,7 +40,11 @@ modport regfile
 );
 modport alu
 (
-    input use_immdt, immdt, shift
+    input valid, use_immdt, immdt, shift, alu_op
+);
+modport d_mem
+(
+    input valid, mem_access, mem_op
 );
 modport branch_controller
 (
@@ -48,7 +52,11 @@ modport branch_controller
 );
 modport fetch_unit
 (
-    input interrupt, halt
+    input valid, interrupt, halt, immdt
+);
+modport writeback
+(
+    input valid, use_rw, rw_addr, write_ps, mem_access
 );
 endinterface
 

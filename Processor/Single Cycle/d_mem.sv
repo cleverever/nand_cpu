@@ -5,8 +5,8 @@ module d_mem
     input logic clk,
     input logic n_rst,
 
-    decoder_output_ifc.alu i_decoder,
-    regfile_output_ifc.alu i_regfile,
+    decoder_output_ifc.d_mem i_decoder,
+    regfile_output_ifc.d_mem i_regfile,
 
     output logic [15 : 0] data
 );

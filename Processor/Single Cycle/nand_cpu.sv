@@ -55,7 +55,9 @@ i_mem I_MEM
 
 decoder DECODER
 (
+    .valid(~halt),
     .instr(instr),
+    
     .out(decoder_output)
 );
 
@@ -101,7 +103,7 @@ writeback_glue_circuit WRITEBACK_GLUE
     .alu_data(alu_data),
     .mem_data(mem_data),
 
-    .decoder_output_ifc(decoder_output),
+    .i_decoder(decoder_output),
 
     .out(writeback)
 );
