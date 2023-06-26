@@ -18,7 +18,7 @@ LI 0b1110 #1
 LI 0b1101 #0
 CP R6
 
-//Cyclic bitwise addition
+//Cyclic carry addition
 CL
 NND R0
 NND R1 //R0 = ~R1
