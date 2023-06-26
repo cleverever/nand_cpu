@@ -12,23 +12,23 @@ nand_cpu DUT
     .halt(done)
 );
 
-int sum;
-int op0;
-int op1;
+logic [15 : 0] sum;
+logic [15 : 0] op0;
+logic [15 : 0] op1;
 
 initial begin
     clk = 1'b0;
     $readmemb("add_short.bin", DUT.I_MEM.core);
-    sum = $random_range(-32768, 32767);
-    op0 = $random_range(-32768, 32767);
+    sum = $urandom_range(0, 65535);
+    op0 = $urandom_range(0, 65535);
     op1 = sum - op0;
+    pwr = 1'b0;
+    #20ns;
+    pwr = 1'b1;
     DUT.D_MEM.core[0] = op0[7 : 0];
     DUT.D_MEM.core[1] = op0[15 : 8];
     DUT.D_MEM.core[2] = op1[7 : 0];
     DUT.D_MEM.core[3] = op1[15 : 8];
-    pwr = 1'b0;
-    #20ns;
-    pwr = 1'b1;
 end
 
 always @(posedge done) begin
@@ -37,8 +37,8 @@ always @(posedge done) begin
     end
     else begin
         $display("TEST FAILED");
-        $display("Expected sum: " + sum);
-        $display("Actual sum:   " + {DUT.D_MEM.core[5], DUT.D_MEM.core[4]});
+        $display("Expected sum: %0b", sum);
+        $display("Actual sum:   %0b", {DUT.D_MEM.core[5], DUT.D_MEM.core[4]});
     end
     $finish;
 end
