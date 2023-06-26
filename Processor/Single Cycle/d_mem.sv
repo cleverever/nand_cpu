@@ -1,3 +1,5 @@
+`include "nand_cpu.svh"
+
 module d_mem
 (
     input logic clk,
@@ -9,7 +11,7 @@ module d_mem
     output logic [15 : 0] data
 );
 
-logic [(2 ** 15) - 1 : 0] [7 : 0] core;
+logic [7 : 0] core [(2 ** 16) - 1];
 
 always_ff @(posedge clk) begin
     if(~n_rst) begin

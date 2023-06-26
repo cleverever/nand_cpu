@@ -1,3 +1,5 @@
+`include "nand_cpu.svh"
+
 interface branch_controller_ifc;
 logic pc_override;
 logic [15 : 0] pc_offset;

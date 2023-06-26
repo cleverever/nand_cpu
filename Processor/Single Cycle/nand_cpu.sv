@@ -1,3 +1,5 @@
+`include "nand_cpu.svh"
+
 module nand_cpu
 (
     input logic clk,

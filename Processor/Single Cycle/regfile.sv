@@ -1,3 +1,5 @@
+`include "nand_cpu.svh"
+
 interface regfile_output_ifc;
 logic [`DATA_WIDTH - 1 : 0] ra;
 logic [`DATA_WIDTH - 1 : 0] rt;

@@ -1,3 +1,5 @@
+`include "nand_cpu.svh"
+
 module i_mem
 (
     input logic unsigned [`PC_SIZE - 1 : 0] pc,
@@ -5,7 +7,7 @@ module i_mem
     output logic [7 : 0] instr
 );
 
-logic [(2 ** `PC_SIZE) - 1 : 0] [7 : 0] core;
+logic [7 : 0] core [(2 ** `PC_SIZE) - 1 : 0];
 
 always_comb begin
     instr = core[pc];

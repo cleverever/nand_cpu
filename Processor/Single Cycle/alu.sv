@@ -1,3 +1,5 @@
+`include "nand_cpu.svh"
+
 interface alu_input_ifc;
 logic op0;
 logic op1;

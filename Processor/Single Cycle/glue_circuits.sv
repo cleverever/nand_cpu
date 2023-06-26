@@ -1,3 +1,5 @@
+`include "nand_cpu.svh"
+
 module alu_glue_circuit
 (
     decoder_output_ifc.alu i_decoder,

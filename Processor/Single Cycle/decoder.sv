@@ -1,3 +1,5 @@
+`include "nand_cpu.svh"
+
 interface decoder_output_ifc;
 logic valid;
 

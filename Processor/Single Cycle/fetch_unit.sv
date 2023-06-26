@@ -1,3 +1,5 @@
+`include "nand_cpu.svh"
+
 module fetch_unit
 (
     input logic clk,
