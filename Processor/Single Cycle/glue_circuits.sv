@@ -5,12 +5,12 @@ module alu_glue_circuit
     decoder_output_ifc.alu i_decoder,
     regfile_output_ifc.alu i_regfile,
 
-    alu_input_ifc.out out,
+    alu_input_ifc.out out
 );
 
 always_comb begin
     out.op0 = i_regfile.ra;
-    out.op1 = i_decoder.use_immdt? {10'b0000000000, i_decoder.shift, i_decoder.immdt};
+    out.op1 = i_decoder.use_immdt? {10'b0000000000, i_decoder.shift, i_decoder.immdt} : i_regfile.rt;
     out.alu_op = i_decoder.alu_op;
 end
 endmodule
@@ -40,7 +40,7 @@ module writeback_glue_circuit
 
     decoder_output_ifc.writeback i_decoder,
 
-    writeback_ifc.out out,
+    writeback_ifc.out out
 );
 
 always_comb begin

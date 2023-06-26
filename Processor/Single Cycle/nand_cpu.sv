@@ -50,7 +50,7 @@ i_mem I_MEM
 (
     .pc(pc),
 
-    .instr(instr),
+    .instr(instr)
 );
 
 decoder DECODER
