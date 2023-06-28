@@ -41,7 +41,7 @@ logic equal;
 
 initial begin
     clk = 1'b0;
-    $readmemb("lessthan_short.bin", DUT.I_MEM.core);
+    $readmemb("less_than_short.bin", DUT.I_MEM.core);
 
     for(int i = 0; i < 64; i++)
     begin
