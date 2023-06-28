@@ -59,6 +59,8 @@ def parseImmdt(immdt: str, size: int) -> str:
         if(not re.compile(r"[0-9a-fA-F]").match(hex)):
             raise InvalidArgError(path, line, lineNum, immdt)
         binStr = format(int(hex, 16), "b")
+    else:
+        raise InvalidArgError(path, line, lineNum, immdt)
     if(len(binStr) > size):
         raise Exception
     while(len(binStr) < size):
