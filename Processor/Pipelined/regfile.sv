@@ -48,11 +48,11 @@ always_ff @(posedge clk) begin
     end
     else begin
         if(i_writeback.valid) begin
-            if(i_writeback.use_rw) begin
-                regs[i_writeback.rw_addr] <= i_writeback.data;
+            if(i_writeback.reg_write) begin
+                regs[i_writeback.reg_addr] <= i_writeback.reg_data;
             end
-            if(i_writeback.write_ps) begin
-                ps_reg <= i_writeback.ps;
+            if(i_writeback.ps_write) begin
+                ps_reg <= i_writeback.ps_data;
             end
         end
     end
