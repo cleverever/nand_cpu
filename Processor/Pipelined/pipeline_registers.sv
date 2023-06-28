@@ -1,4 +1,4 @@
-module m2w_pr
+module a2w_pr
 (
     input logic clk,
     input logic n_rst,

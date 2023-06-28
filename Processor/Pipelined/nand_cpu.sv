@@ -8,10 +8,12 @@ module nand_cpu
     output logic halt
 );
 
+d_cache_ifc d_cache_output();
 writeback_ifc m_writeback();
 
 writeback_ifc w_writeback();
 
+//FETCH
 fetch_unit FETCH_UNIT
 (
     .clk,
@@ -26,7 +28,7 @@ fetch_unit FETCH_UNIT
     .halted(halt)
 );
 
-i_mem I_MEM
+i_cache I_CACHE
 (
     .pc(pc),
 
@@ -38,6 +40,7 @@ i2d_pr I2D_PR
 
 );
 
+//DECODE
 decoder DECODER
 (
     .valid(~halt),
@@ -57,11 +60,12 @@ regfile REGFILE
     .out(reg_data)
 );
 
-d2e_pr D2E_PR
+d2a_pr D2A_PR
 (
 
 );
 
+//ACTION
 alu ALU
 (
     .in(alu_input),
@@ -69,12 +73,7 @@ alu ALU
     .result(alu_data)
 );
 
-e2m_pr E2M_PR
-(
-
-);
-
-d_mem D_MEM
+d_cache D_CACHE
 (
     .clk,
     .n_rst,
@@ -82,16 +81,17 @@ d_mem D_MEM
     .i_decoder(decoder_output),
     .i_regfile(reg_data),
 
-    .data(mem_data)
+    .out(d_cache_output)
 );
 
 writeback_glue WRITEBACK_GLUE
 (
     //TEMP
+
     .out(m_writeback)
 );
 
-m2w_pr M2W_PR
+a2w_pr A2W_PR
 (
     .clk,
     .n_rst,
