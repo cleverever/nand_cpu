@@ -13,7 +13,7 @@ modport alu
 (
     input ra, rt
 );
-modport branch_controller
+modport fetch_unit
 (
     input ps, rt
 );

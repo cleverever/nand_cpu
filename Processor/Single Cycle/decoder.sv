@@ -48,15 +48,15 @@ modport d_mem
 );
 modport branch_controller
 (
-    input valid, jump, branch
+    input valid
 );
 modport fetch_unit
 (
-    input valid, interrupt, halt, immdt
+    input valid, jump, branch, interrupt, halt, immdt
 );
 modport writeback
 (
-    input valid, use_rw, rw_addr, write_ps, mem_access
+    input valid, jump, use_rw, rw_addr, write_ps, mem_access
 );
 endinterface
 

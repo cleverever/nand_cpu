@@ -38,6 +38,8 @@ module writeback_glue_circuit
     input logic [15 : 0] alu_data,
     input logic [15 : 0] mem_data,
 
+    input logic unsigned [`PC_SIZE - 1 : 0] pc,
+
     decoder_output_ifc.writeback i_decoder,
 
     writeback_ifc.out out
@@ -49,6 +51,6 @@ always_comb begin
     out.rw_addr = i_decoder.rw_addr;
     out.ps = alu_data[0];
     out.write_ps = i_decoder.write_ps;
-    out.data = i_decoder.mem_access? mem_data : alu_data;
+    out.data = i_decoder.jump? (pc[15 : 0] + 1) : (i_decoder.mem_access? mem_data : alu_data);
 end
 endmodule

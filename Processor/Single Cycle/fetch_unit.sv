@@ -7,8 +7,8 @@ module fetch_unit
 
     input logic unsigned [`PC_SIZE - 1 : 0] interrupt_handler [15],
 
-    branch_controller_ifc.in i_branch_controller,
     decoder_output_ifc.fetch_unit i_decoder,
+    regfile_output_ifc.fetch_unit i_regfile,
 
     output logic unsigned [`PC_SIZE - 1 : 0] pc,
     output logic halted
@@ -35,8 +35,11 @@ always_ff @(posedge clk) begin
                         int_return_pc <= pc + 1;
                     end
                 end
-                else if(i_branch_controller.pc_override) begin
-                pc <= pc - (i_branch_controller.pc_offset[15] << 15) + i_branch_controller.pc_offset[14 : 0];
+                else if(i_decoder.valid & i_decoder.branch & i_regfile.ps) begin
+                    pc <= pc - (i_regfile.rt[15] << 15) + i_regfile.rt[14 : 0];
+                end
+                else if(i_decoder.valid & i_decoder.jump) begin
+                    pc[15 : 0] <= i_regfile.rt;
                 end
                 else begin
                     pc <= pc + 1;

@@ -8,7 +8,6 @@ module nand_cpu
     output logic halt
 );
 
-branch_controller_ifc branch_controller();
 
 logic unsigned [`PC_SIZE - 1 : 0] pc;
 
@@ -24,14 +23,6 @@ logic [15 : 0] mem_data;
 
 writeback_ifc writeback();
 
-branch_controller BRANCH_CONTROLLER
-(
-    .i_decoder(decoder_output),
-    .i_regfile(reg_data),
-
-    .out(branch_controller)
-);
-
 fetch_unit FETCH_UNIT
 (
     .clk(clk),
@@ -39,7 +30,7 @@ fetch_unit FETCH_UNIT
 
     .interrupt_handler(),
 
-    .i_branch_controller(branch_controller),
+    .i_regfile(reg_data),
     .i_decoder(decoder_output),
 
     .pc(pc),
@@ -102,6 +93,8 @@ writeback_glue_circuit WRITEBACK_GLUE
 (
     .alu_data(alu_data),
     .mem_data(mem_data),
+
+    .pc(pc),
 
     .i_decoder(decoder_output),
 
