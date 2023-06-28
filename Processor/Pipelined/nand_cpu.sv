@@ -8,34 +8,14 @@ module nand_cpu
     output logic halt
 );
 
-branch_controller_ifc branch_controller();
+writeback_ifc m_writeback();
 
-logic unsigned [`PC_SIZE - 1 : 0] pc;
-
-logic [7 : 0] instr;
-decoder_output_ifc decoder_output();
-
-regfile_output_ifc reg_data();
-
-alu_input_ifc alu_input();
-
-logic [15 : 0] alu_data;
-logic [15 : 0] mem_data;
-
-writeback_ifc writeback();
-
-branch_controller BRANCH_CONTROLLER
-(
-    .i_decoder(decoder_output),
-    .i_regfile(reg_data),
-
-    .out(branch_controller)
-);
+writeback_ifc w_writeback();
 
 fetch_unit FETCH_UNIT
 (
-    .clk(clk),
-    .n_rst(n_rst),
+    .clk,
+    .n_rst,
 
     .interrupt_handler(),
 
@@ -68,10 +48,10 @@ decoder DECODER
 
 regfile REGFILE
 (
-    .clk(clk),
-    .n_rst(n_rst),
+    .clk,
+    .n_rst,
 
-    .i_writeback(writeback),
+    .i_writeback(w_writeback),
     .i_reg_read(decoder_output),
 
     .out(reg_data)
@@ -96,8 +76,8 @@ e2m_pr E2M_PR
 
 d_mem D_MEM
 (
-    .clk(clk),
-    .n_rst(n_rst),
+    .clk,
+    .n_rst,
 
     .i_decoder(decoder_output),
     .i_regfile(reg_data),
@@ -105,8 +85,18 @@ d_mem D_MEM
     .data(mem_data)
 );
 
+writeback_glue WRITEBACK_GLUE
+(
+    //TEMP
+    .out(m_writeback)
+);
+
 m2w_pr M2W_PR
 (
+    .clk,
+    .n_rst,
 
+    .in(m_writeback),
+    .out(w_writeback)
 );
 endmodule
