@@ -1,6 +1,6 @@
-interface decoder_output_ifc;
-logic valid;
+`include "nand_cpu.svh"
 
+interface decoder_output_ifc;
 logic use_ra;
 
 logic use_rt;
@@ -24,31 +24,26 @@ logic halt;
 
 nand_cpu_pkg::ALU_OP alu_op;
 
-modport decoder
+modport in
 (
-    output valid, use_ra, use_rt, rt_addr, use_rw, rw_addr, read_ps,
+    input use_ra, use_rt, rt_addr, use_rw, rw_addr, read_ps,
     write_ps, use_immdt, immdt, shift, jump, branch, interrupt, halt
 );
-modport regfile
+modport out
 (
-    input valid, use_ra, use_rt, rt_addr, read_ps, write_ps
-);
-modport alu
-(
-    input use_immdt, immdt, shift
+    output use_ra, use_rt, rt_addr, use_rw, rw_addr, read_ps,
+    write_ps, use_immdt, immdt, shift, jump, branch, interrupt, halt
 );
 endinterface
 
 module decoder
 (
-    input logic valid,
     input logic [7 : 0] instr,
 
-    decoder_output_ifc.decoder out
+    decoder_output_ifc.out out
 );
 
 always_comb begin
-    out.valid = valid;
     out.rt_addr = instr[3 : 0];
     out.rw_addr = 4'b0000;
     read_ps = 1'b0;
