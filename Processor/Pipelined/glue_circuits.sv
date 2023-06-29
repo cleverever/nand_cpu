@@ -16,13 +16,19 @@ endmodule
 module decode_glue
 (
     decoder_output_ifc.in i_decoder,
-    regfile_output_ifc.in i_regfile
+    regfile_output_ifc.in i_regfile,
 
+    act_pass_ifc.out o_act_pass,
     alu_input_ifc.out o_alu_input,
     d_cache_input_ifc.out o_d_cache_input
 );
 
 always_comb begin
+    o_act_pass.mem_access <= i_decoder.mem_access;
+    o_act_pass.reg_write <= i_decoder.use_rw;
+    o_act_pass.reg_addr <= i_decoder.rw_addr;
+    o_act_pass.ps_write <= i_decoder.write_ps;
+
     o_alu_input.op0 = i_regfile.ra;
     o_alu_input.op1 = i_decoder.use_immdt? {10'b0000000000, i_decoder.shift, i_decoder.immdt} : i_regfile.rt;
     o_alu_input.alu_op = i_decoder.alu_op;
@@ -37,6 +43,8 @@ endmodule
 module action_glue
 (
     act_pass_ifc.in i_act_pass,
+    logic [15 : 0] i_alu_output,
+    logic [15 : 0] i_d_cache_output,
 
     writeback_ifc.out o_writeback
 );
@@ -45,8 +53,8 @@ always_comb begin
     o_writeback.valid = i_act_pass.valid;
     o_writeback.reg_write = i_act_pass.reg_write;
     o_writeback.reg_addr = i_act_pass.reg_addr;
-    o_writeback.reg_data = TEMP;
+    o_writeback.reg_data = i_act_pass.mem_access? i_d_cache_output : i_alu_output;
     o_writeback.ps_write = i_act_pass.ps_write;
-    o_writeback.ps_data = i_act_pass.ps_data;
+    o_writeback.ps_data = i_alu_output[0];
 end
 endmodule

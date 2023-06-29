@@ -14,12 +14,14 @@ pr_pass_ifc f_pr_pass();
 logic [7 : 0] d_instr;
 alu_input_ifc d_alu_input();
 d_alu_input_ifc d_d_cache_input();
+act_pass_ifc d_act_pass();
 pr_pass_ifc d_pr_pass();
 
 alu_input_ifc a_alu_input();
 d_alu_input_ifc a_d_cache_input();
 d_cache_ifc d_cache_output();
-writeback_ifc m_writeback();
+writeback_ifc a_writeback();
+act_pass_ifc a_act_pass();
 pr_pass_ifc a_pr_pass();
 
 writeback_ifc w_writeback();
@@ -50,7 +52,7 @@ i_cache I_CACHE
 fetch_glue FETCH_GLUE
 (
     .i_pc(pc),
-    
+
     .o_pr_pass(f_pr_pass)
 );
 
@@ -90,7 +92,8 @@ decode_glue DECODE_GLUE
     .i_decoder(decoder_output),
     .i_regfile(regfile_output),
 
-    .o_alu_input(d_alu_input)
+    .o_act_pass(d_act_pass),
+    .o_alu_input(d_alu_input),
     .o_d_cache_input(d_d_cache_input)
 );
 
@@ -101,6 +104,9 @@ d2a_pr D2A_PR
 
     .i_pr_pass(d_pr_pass),
     .o_pr_pass(a_pr_pass),
+
+    .i_act_pass(d_act_pass),
+    .o_act_pass(a_act_pass),
 
     .i_alu_input(d_alu_input),
     .o_alu_input(a_alu_input),
@@ -130,10 +136,11 @@ d_cache D_CACHE
 
 action_glue ACTION_GLUE
 (
+    .i_act_pass(a_act_pass),
     .i_alu_output(alu_output),
-    .i_d_cache_output(d_cache_output),
+    .i_d_cache_output(d_cache_output.data),
 
-    .o_writeback(m_writeback)
+    .o_writeback(a_writeback)
 );
 
 a2w_pr A2W_PR
@@ -144,7 +151,7 @@ a2w_pr A2W_PR
     .i_pr_pass(a_pr_pass),
     .o_pr_pass(w_pr_pass)
 
-    .i_writeback(m_writeback),
+    .i_writeback(a_writeback),
     .o_writeback(w_writeback)
 );
 endmodule

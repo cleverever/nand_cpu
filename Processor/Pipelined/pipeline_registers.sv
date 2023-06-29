@@ -45,6 +45,9 @@ module d2a_pr
     pr_pass_ifc.in i_pr_pass,
     pr_pass_ifc.out o_pr_pass,
 
+    act_pass_ifc.in i_act_pass,
+    act_pass_ifc.out o_act_pass,
+
     alu_input_ifc.in i_alu_input,
     alu_input_ifc.out o_alu_input,
 
@@ -59,6 +62,11 @@ always_ff @(posedge clk) begin
     else begin
         o_pr_pass.valid <= i_pr_pass.valid;
         o_pr_pass.pc <= i_pr_pass.pc;
+
+        o_act_pass.mem_access <= i_act_pass.mem_access;
+        o_act_pass.reg_write <= i_act_pass.reg_write;
+        o_act_pass.reg_addr <= i_act_pass.reg_addr;
+        o_act_pass.ps_write <= i_act_pass.ps_write;
 
         o_alu_input.op0 <= i_alu_input.op0;
         o_alu_input.op1 <= i_alu_input.op1;
