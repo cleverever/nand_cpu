@@ -1,18 +1,18 @@
 `include "nand_cpu.svh"
 
 interface d_cache_input_ifc;
-logic valid;
+logic mem_access;
 logic [15 : 0] address;
 nand_cpu_pkg::MEM_OP mem_op;
 logic [15 : 0] data;
 
 modport in
 (
-    input valid, address, mem_op, data
+    input mem_access, address, mem_op, data
 );
 modport out
 (
-    output valid, address, mem_op, data
+    output mem_access, address, mem_op, data
 );
 endinterface
 
@@ -35,6 +35,7 @@ module d_cache
     input logic clk,
     input logic n_rst,
 
+    input logic valid,
     d_cache_input_ifc.in in,
 
     d_cache_output_ifc.out out
