@@ -19,19 +19,17 @@ modport out
 endinterface
 
 interface act_pass_ifc;
-logic valid;
 logic mem_access;
 logic reg_write;
 logic [3 : 0] reg_addr;
 logic ps_write;
-logic ps_data;
 
 modport in
 (
-    input valid, reg_write, reg_addr, ps_write, ps_data
+    input valid, mem_access, reg_write, reg_addr, ps_write
 );
 modport out
 (
-    output valid, reg_write, reg_addr, ps_write, ps_data
+    output valid, mem_access, reg_write, reg_addr, ps_write
 );
 endinterface
