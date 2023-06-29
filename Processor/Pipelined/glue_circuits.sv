@@ -2,11 +2,14 @@
 
 module fetch_glue
 (
+    logic unsigned [`PC_SIZE - 1 : 0] i_pc,
+
     pr_pass_ifc.out o_pr_pass
 );
 
 always_comb begin
-    
+    o_pr_pass.valid = 1'b1;
+    o_pr_pass.pc = i_pc;
 end
 endmodule
 

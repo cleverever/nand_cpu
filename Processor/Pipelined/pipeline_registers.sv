@@ -46,7 +46,10 @@ module d2a_pr
     pr_pass_ifc.out o_pr_pass,
 
     alu_input_ifc.in i_alu_input,
-    alu_input_ifc.out o_alu_input
+    alu_input_ifc.out o_alu_input,
+
+    d_cache_input_ifc.in i_d_cache_input,
+    d_cache_input_ifc.out o_d_cache_input
 );
 
 always_ff @(posedge clk) begin
@@ -60,6 +63,11 @@ always_ff @(posedge clk) begin
         o_alu_input.op0 <= i_alu_input.op0;
         o_alu_input.op1 <= i_alu_input.op1;
         o_alu_input.alu_op <= i_alu_input.alu_op;
+
+        o_d_cache_input.mem_access <= o_d_cache_input.mem_access;
+        o_d_cache_input.address <= i_d_cache_input.address;
+        o_d_cache_input.mem_op <= i_d_cache_input.mem_op;
+        o_d_cache_input.data <= i_d_cache_input.data;
     end
 end
 endmodule
