@@ -15,13 +15,19 @@ module decode_glue
     decoder_output_ifc.in i_decoder,
     regfile_output_ifc.in i_regfile
 
-    alu_input_ifc.out o_alu_input
+    alu_input_ifc.out o_alu_input,
+    d_cache_input_ifc.out o_d_cache_input
 );
 
 always_comb begin
     o_alu_input.op0 = i_regfile.ra;
     o_alu_input.op1 = i_decoder.use_immdt? {10'b0000000000, i_decoder.shift, i_decoder.immdt} : i_regfile.rt;
     o_alu_input.alu_op = i_decoder.alu_op;
+
+    o_d_cache_input.valid = i_decoder.mem_access;
+    o_d_cache_input.address = i_regfile.rt;
+    o_d_cache_input.mem_op = i_decoder.mem_op;
+    o_d_cache_input.data = i_regfile.ra;
 end
 endmodule
 
