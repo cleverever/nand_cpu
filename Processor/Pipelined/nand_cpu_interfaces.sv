@@ -32,6 +32,6 @@ modport in
 );
 modport out
 (
-    output.p['] valid, reg_write, reg_addr, ps_write, ps_data
+    output valid, reg_write, reg_addr, ps_write, ps_data
 );
 endinterface
