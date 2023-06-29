@@ -1,5 +1,19 @@
 `include "nand_cpu.svh"
 
+interface d_cache_input_ifc;
+logic valid;
+logic [15 : 0] data;
+
+modport in
+(
+    input valid, data
+);
+modport out
+(
+    output valid, data
+);
+endinterface
+
 interface d_cache_ifc;
 logic valid;
 logic [15 : 0] data;
