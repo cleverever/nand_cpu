@@ -8,10 +8,20 @@ module nand_cpu
     output logic halt
 );
 
+logic [7 : 0] f_instr;
+pr_pass_ifc f_pr_pass();
+
+logic [7 : 0] d_instr;
+alu_input_ifc d_alu_input();
+pr_pass_ifc d_pr_pass();
+
+alu_input_ifc a_alu_input();
 d_cache_ifc d_cache_output();
 writeback_ifc m_writeback();
+pr_pass_ifc a_pr_pass();
 
 writeback_ifc w_writeback();
+pr_pass_ifc w_pr_pass();
 
 //FETCH
 fetch_unit FETCH_UNIT
@@ -32,19 +42,31 @@ i_cache I_CACHE
 (
     .pc(pc),
 
-    .instr(instr)
+    .instr(f_instr)
+);
+
+fetch_glue FETCH_GLUE
+(
+    .o_pr_pass(f_pr_pass)
 );
 
 i2d_pr I2D_PR
 (
+    .clk,
+    .n_rst,
 
+    .i_pr_pass(f_pr_pass),
+    .o_pr_pass(d_pr_pass),
+
+    .i_instr(f_instr),
+    .o_instr(d_instr)
 );
 
 //DECODE
 decoder DECODER
 (
-    .valid(~halt),
-    .instr(instr),
+    .valid(d_pr_pass.valid),
+    .instr(d_instr),
     
     .out(decoder_output)
 );
@@ -57,20 +79,35 @@ regfile REGFILE
     .i_writeback(w_writeback),
     .i_reg_read(decoder_output),
 
-    .out(reg_data)
+    .out(regfile_output)
+);
+
+decode_glue DECODE_GLUE
+(
+    .i_decoder(decoder_output),
+    .i_regfile(regfile_output),
+
+    .o_alu_input(d_alu_input)
 );
 
 d2a_pr D2A_PR
 (
+    .clk,
+    .n_rst,
 
+    .i_pr_pass(d_pr_pass),
+    .o_pr_pass(a_pr_pass),
+
+    .i_alu_input(d_alu_input),
+    .o_alu_input(a_alu_input)
 );
 
 //ACTION
 alu ALU
 (
-    .in(alu_input),
+    .in(a_alu_input),
 
-    .result(alu_data)
+    .out(alu_data)
 );
 
 d_cache D_CACHE
@@ -79,16 +116,16 @@ d_cache D_CACHE
     .n_rst,
 
     .i_decoder(decoder_output),
-    .i_regfile(reg_data),
+    .i_regfile(regfile_output),
 
     .out(d_cache_output)
 );
 
-writeback_glue WRITEBACK_GLUE
+action_glue ACTION_GLUE
 (
     //TEMP
 
-    .out(m_writeback)
+    .o_writeback(m_writeback)
 );
 
 a2w_pr A2W_PR
@@ -96,7 +133,10 @@ a2w_pr A2W_PR
     .clk,
     .n_rst,
 
-    .in(m_writeback),
-    .out(w_writeback)
+    .i_pr_pass(a_pr_pass),
+    .o_pr_pass(w_pr_pass)
+
+    .i_writeback(m_writeback),
+    .o_writeback(w_writeback)
 );
 endmodule
