@@ -27,10 +27,10 @@ task test
     DUT.D_MEM.core[3] = op1[15 : 8];
     wait(done);
     assert (DUT.D_MEM.core[4] == sum[7 : 0] & DUT.D_MEM.core[5] == sum[15 : 8]) begin
-        $display("TEST PASSED");
+        $display("TEST PASSED - %d + %d", op0, op1);
     end
     else begin
-        $display("TEST FAILED");
+        $display("TEST FAILED - %d + %d", op0, op1);
         $display("Expected sum: %0b", sum);
         $display("Actual sum:   %0b", {DUT.D_MEM.core[5], DUT.D_MEM.core[4]});
     end    
