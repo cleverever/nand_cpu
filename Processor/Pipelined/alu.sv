@@ -16,7 +16,8 @@ endinterface
 module alu
 (
     alu_input_ifc.in in,
-    output logic [15 : 0] result
+
+    output logic [15 : 0] out
 );
 
 always_comb begin
