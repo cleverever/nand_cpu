@@ -1,20 +1,90 @@
+`include "nand_cpu.svh"
+
+interface pr_pass_ifc;
+logic valid;
+logic unsigned [`PC_SIZE - 1 : 0] pc;
+
+modport in
+(
+    input valid, pc
+);
+modport out
+(
+    output valid, pc
+);
+endinterface
+
+module i2d_pr
+(
+    input logic clk,
+    input logic n_rst,
+
+    pr_pass_ifc.in i_pr_pass,
+    pr_pass_ifc.out o_pr_pass,
+
+    input logic i_instr,
+    output logic o_instr
+);
+
+always_ff @(posedge clk) begin
+    if(~n_rst) begin
+        o_pr_pass.valid <= 1'b0;
+    end
+    else begin
+        o_pr_pass.valid <= i_pr_pass.valid;
+        o_pr_pass.pc <= i_pr_pass.pc;
+    end
+end
+endmodule
+
+module d2a_pr
+(
+    input logic clk,
+    input logic n_rst,
+
+    pr_pass_ifc.in i_pr_pass,
+    pr_pass_ifc.out o_pr_pass,
+
+    alu_input_ifc.in i_alu_input,
+    alu_input_ifc.out o_alu_input
+);
+
+always_ff @(posedge clk) begin
+    if(~n_rst) begin
+        o_pr_pass.valid <= 1'b0;
+    end
+    else begin
+        o_pr_pass.valid <= i_pr_pass.valid;
+        o_pr_pass.pc <= i_pr_pass.pc;
+
+        o_alu_input.op0 <= i_alu_input.op0;
+        o_alu_input.op1 <= i_alu_input.op1;
+        o_alu_input.alu_op <= i_alu_input.alu_op;
+    end
+end
+endmodule
+
 module a2w_pr
 (
     input logic clk,
     input logic n_rst,
 
-    writeback_ifc.in in,
-    writeback_ifc.in out
+    pr_pass_ifc.in i_pr_pass,
+    pr_pass_ifc.out o_pr_pass,
+
+    writeback_ifc.in i_writeback,
+    writeback_ifc.in o_writeback
 );
 
 always_ff @(posedge clk) begin
     if(~n_rst) begin
-        out.valid <= 1'b0;
+        o_pr_pass.valid <= 1'b0;
     end
     else begin
-        out.valid <= in.valid;
-        out.reg_addr <= in.reg_addr;
-        out.data <= in.data;
+        o_pr_pass.valid <= i_pr_pass.valid;
+        o_pr_pass.pc <= i_pr_pass.pc;
+        o_writeback.reg_addr <= i_writeback.reg_addr;
+        o_writeback.data <= i_writeback.data;
     end
 end
 endmodule
