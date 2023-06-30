@@ -27,7 +27,9 @@ pr_pass_ifc a_pr_pass();
 writeback_ifc w_writeback();
 pr_pass_ifc w_pr_pass();
 
+//====================================================================================================
 //FETCH
+//====================================================================================================
 fetch_unit FETCH_UNIT
 (
     .clk,
@@ -49,6 +51,11 @@ i_cache I_CACHE
     .instr(f_instr)
 );
 
+branch_target_buffer BRANCH_TARGET_BUFFER
+(
+    
+);
+
 fetch_glue FETCH_GLUE
 (
     .i_pc(pc),
@@ -68,7 +75,9 @@ i2d_pr I2D_PR
     .o_instr(d_instr)
 );
 
+//====================================================================================================
 //DECODE
+//====================================================================================================
 decoder DECODER
 (
     .instr(d_instr),
@@ -115,7 +124,9 @@ d2a_pr D2A_PR
     .o_d_cache_input(a_d_cache_input)
 );
 
+//====================================================================================================
 //ACTION
+//====================================================================================================
 alu ALU
 (
     .in(a_alu_input),
@@ -153,5 +164,19 @@ a2w_pr A2W_PR
 
     .i_writeback(a_writeback),
     .o_writeback(w_writeback)
+);
+
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+//Hazard
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+hazard_controller HAZARD_CONTROLLER
+(
+
+);
+
+branch_controller BRANCH_CONTROLLER
+(
+    .clk,
+    .n_rst,
 );
 endmodule
