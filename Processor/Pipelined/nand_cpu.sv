@@ -14,16 +14,16 @@ pr_pass_ifc f_pr_pass();
 logic [7 : 0] d_instr;
 alu_input_ifc d_alu_input();
 d_alu_input_ifc d_d_cache_input();
+branch_feedback_ifc d_branch_feedback();
 act_pass_ifc d_act_pass();
-btb_input_ifc d_btb_input();
 pr_pass_ifc d_pr_pass();
 
 alu_input_ifc a_alu_input();
 d_alu_input_ifc a_d_cache_input();
 d_cache_ifc d_cache_output();
+branch_feedback_ifc a_branch_feedback();
 writeback_ifc a_writeback();
 act_pass_ifc a_act_pass();
-btb_input_ifc a_btb_input();
 pr_pass_ifc a_pr_pass();
 
 writeback_ifc w_writeback();
@@ -53,13 +53,13 @@ i_cache I_CACHE
     .instr(f_instr)
 );
 
-branch_target_buffer BRANCH_TARGET_BUFFER
+branch_predictor branch_predictor
 (
     .clk,
     .n_rst,
 
     .pc(pc),
-    .out()
+    .
 );
 
 fetch_glue FETCH_GLUE
@@ -110,7 +110,7 @@ decode_glue DECODE_GLUE
     .o_act_pass(d_act_pass),
     .o_alu_input(d_alu_input),
     .o_d_cache_input(d_d_cache_input),
-    .o_btb_input(d_btb_input)
+    .o_branch_feedback_ifc(d_branch_feedback)
 );
 
 d2a_pr D2A_PR
@@ -130,8 +130,8 @@ d2a_pr D2A_PR
     .i_d_cache_input(d_d_cache_input),
     .o_d_cache_input(a_d_cache_input),
 
-    .i_btb_input(d_btb_input),
-    .o_btb_input(a_btb_input)
+    .i_branch_feedback(d_branch_feedback),
+    .o_branch_feedback(a_branch_feedback)
 );
 
 //====================================================================================================

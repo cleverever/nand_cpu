@@ -10,12 +10,18 @@ package nand_cpu_pkg;
         ALU_NE,
         ALU_LI
     }
-    ALU_OP;
+    AluOp;
 
     typedef enum logic
     {
         READ,
         WRITE
     }
-    MEM_OP;
+    MemOp;
+
+    typedef enum
+    {
+        GSHARE
+    }
+    PredictorType;
 endpackage

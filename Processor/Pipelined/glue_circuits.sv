@@ -15,12 +15,14 @@ endmodule
 
 module decode_glue
 (
+    pr_pass_ifc.in i_pr_pass,
     decoder_output_ifc.in i_decoder,
     regfile_output_ifc.in i_regfile,
 
     act_pass_ifc.out o_act_pass,
     alu_input_ifc.out o_alu_input,
-    d_cache_input_ifc.out o_d_cache_input
+    d_cache_input_ifc.out o_d_cache_input,
+    branch_feedback_ifc.out o_branch_feedback
 );
 
 always_comb begin
@@ -37,6 +39,14 @@ always_comb begin
     o_d_cache_input.address = i_regfile.rt;
     o_d_cache_input.mem_op = i_decoder.mem_op;
     o_d_cache_input.data = i_regfile.ra;
+
+    o_branch_feedback.valid = i_pr_pass.valid & (i_decoder.branch | i_decoder.jump);
+    o_branch_feedback.branch = i_decoder.branch;
+    o_branch_feedback.pc = i_pr_pass.pc;
+    o_branch_feedback.predict_target = TEMP;
+    o_branch_feedback.feedback_target = i_regfile.rt;
+    o_branch_feedback.predict_taken = TEMP;
+    o_branch_feedback.feedback_taken = i_regfile.ps;
 end
 endmodule
 

@@ -53,6 +53,9 @@ module d2a_pr
 
     d_cache_input_ifc.in i_d_cache_input,
     d_cache_input_ifc.out o_d_cache_input
+
+    o_branch_feedback_ifc.in i_branch_feedback,
+    o_branch_feedback_ifc.out o_branch_feedback,
 );
 
 always_ff @(posedge clk) begin
