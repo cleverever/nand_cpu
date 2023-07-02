@@ -3,7 +3,7 @@
 interface alu_input_ifc;
 logic op0;
 logic op1;
-nand_cpu_pkg::ALU_OP alu_op;
+nand_cpu_pkg::AluOp alu_op;
 
 modport in
 (
