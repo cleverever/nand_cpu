@@ -40,7 +40,7 @@ always_comb begin
     o_d_cache_input.mem_op = i_decoder.mem_op;
     o_d_cache_input.data = i_regfile.ra;
 
-    o_branch_feedback.valid = i_pr_pass.valid & (i_decoder.branch | i_decoder.jump);
+    o_branch_feedback.valid = i_pr_pass.valid;
     o_branch_feedback.branch = i_decoder.branch;
     o_branch_feedback.pc = i_pr_pass.pc;
     o_branch_feedback.predict_target = TEMP;
