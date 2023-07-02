@@ -57,9 +57,13 @@ branch_predictor branch_predictor
 (
     .clk,
     .n_rst,
-
+    
     .pc(pc),
-    .
+    .ps(regfile_output.ps_data),
+    
+    .out(),
+    
+    .i_feedback()
 );
 
 fetch_glue FETCH_GLUE
@@ -181,6 +185,6 @@ a2w_pr A2W_PR
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 hazard_controller HAZARD_CONTROLLER
 (
-
+    .i_branch_predictor()
 );
 endmodule

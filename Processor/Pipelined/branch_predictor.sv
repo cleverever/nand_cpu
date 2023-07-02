@@ -1,34 +1,59 @@
 `include "nand_cpu.svh"
 
 interface branch_predictor_output_ifc;
-logic taken;
+logic pc_override;
 logic [`PC_SIZE - 1 : 0] target;
+
+modport in
+(
+    input pc_override, target
+);
+modport out
+(
+    output pc_override, target
+);
 endinterface
 
 module branch_predictor #(parameter TYPE = GSHARE)
 (
     input logic clk,
     input logic n_rst,
-
-    branch_feedback_ifc.in i_feedback,
+    
     input logic [`PC_SIZE - 1 : 0] pc,
+    input logic ps,
 
-    branch_predictor_output_ifc.out out
+    branch_predictor_output_ifc.out out,
+
+    branch_feedback_ifc.in i_feedback
 );
 
-branch_prediction_ifc request();
+branch_request_ifc request();
+logic hit;
+logic branch;
+logic taken;
 
 branch_target_buffer BRANCH_TARGET_BUFFER
 (
     .clk,
     .n_rst,
-
+    
     .i_feedback(i_feedback),
 
     .pc(pc),
 
-    .out(out.target)
+    .hit(hit),
+    .branch(branch),
+    .target(target)
 );
+
+always_comb begin
+    request.pc = pc;
+    request.target = target;
+    request.ps = ps;
+
+    out.pc_override = hit & (~branch | taken);
+    out.target = target;
+end
 
 generate
     case(TYPE)
@@ -37,10 +62,11 @@ generate
             .clk,
             .n_rst,
 
-            .feedback(feedback),
             .request(request),
 
-            .taken
+            .taken(taken),
+
+            .feedback(feedback)
         );
     endcase
 endgenerate
@@ -51,10 +77,11 @@ module branch_predictor_gshare #(parameter INDEX_SIZE = 6)
     input logic clk,
     input logic n_rst,
 
-    branch_feedback_ifc.in feedback,
-    branch_prediction_ifc.in request,
+    branch_request_ifc.in request,
 
-    output logic taken
+    output logic taken,
+
+    branch_feedback_ifc.in feedback
 );
 
 logic [INDEX_SIZE - 1 : 0] history;
@@ -77,6 +104,7 @@ always_ff @(posedge clk) begin
         pht <= {default:2'b01};
     end
     else begin
+        history <= {history[INDEX_SIZE - 2 : 0], taken};
         if(feedback.valid) begin
             if(feedback.feedback_taken) begin
                 if(pht[fb_index] < 3) begin

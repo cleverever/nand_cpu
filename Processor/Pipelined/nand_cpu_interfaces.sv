@@ -53,17 +53,17 @@ modport out
 );
 endinterface
 
-interface branch_prediction_ifc;
-logic valid;
-logic [`PC_SIZE - 1 : 0] pc;
+interface branch_request_ifc;
+logic [`PC_SIZE - 1 : 0] pc,
 logic [`PC_SIZE - 1 : 0] target;
+logic ps,
 
 modport in
 (
-    input valid, pc, target
+    input pc, target, ps
 );
 modport out
 (
-    output valid, pc, target
+    output pc, target, ps
 );
 endinterface
