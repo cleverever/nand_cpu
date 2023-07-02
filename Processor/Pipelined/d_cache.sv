@@ -3,7 +3,7 @@
 interface d_cache_input_ifc;
 logic mem_access;
 logic [15 : 0] address;
-nand_cpu_pkg::MEM_OP mem_op;
+nand_cpu_pkg::MemOp mem_op;
 logic [15 : 0] data;
 
 modport in
