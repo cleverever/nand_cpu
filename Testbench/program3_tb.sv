@@ -21,12 +21,11 @@ task test
     pwr = 1'b0;
     #40ns;
     pwr = 1'b1;
-    DUT.D_MEM.core[0] = op0[7 : 0];
-    DUT.D_MEM.core[1] = op0[15 : 8];
+    DUT.D_MEM.core[0] = op0;
     wait(done);
     correct = 1'b1;
     for(int i = 1; i < op0 + 1; i++) begin
-        correct = correct & ({DUT.D_MEM.core[(i * 2) + 1], DUT.D_MEM.core[i * 2]} == i[15 : 0]);
+        correct = correct & (DUT.D_MEM.core[i] == i[15 : 0]);
     end
     assert (correct) begin
         $display("TEST PASSED - Count to %d", op0);

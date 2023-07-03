@@ -21,12 +21,10 @@ task test
     pwr = 1'b0;
     #40ns;
     pwr = 1'b1;
-    DUT.D_MEM.core[0] = op0[7 : 0];
-    DUT.D_MEM.core[1] = op0[15 : 8];
-    DUT.D_MEM.core[2] = op1[7 : 0];
-    DUT.D_MEM.core[3] = op1[15 : 8];
+    DUT.D_MEM.core[0] = op0;
+    DUT.D_MEM.core[1] = op1;
     wait(done);
-    assert (DUT.D_MEM.core[4] == sum[7 : 0] & DUT.D_MEM.core[5] == sum[15 : 8]) begin
+    assert (DUT.D_MEM.core[2] == sum) begin
         $display("TEST PASSED - %d + %d", op0, op1);
     end
     else begin
