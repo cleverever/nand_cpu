@@ -18,7 +18,9 @@ module regfile
     input logic clk,
     input logic n_rst,
 
+    input logic writeback_valid,
     writeback_ifc.in i_writeback,
+
     decoder_output_ifc.regfile i_reg_read,
 
     regfile_output_ifc.regfile out
@@ -47,7 +49,7 @@ always_ff @(posedge clk) begin
         ps_reg <= 1'b0;
     end
     else begin
-        if(i_writeback.valid) begin
+        if(writeback_valid) begin
             if(i_writeback.reg_write) begin
                 regs[i_writeback.reg_addr] <= i_writeback.reg_data;
             end

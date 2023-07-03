@@ -1,7 +1,6 @@
 `include "nand_cpu.svh"
 
 interface writeback_ifc;
-logic valid;
 logic reg_write;
 logic [3 : 0] reg_addr;
 logic [15 : 0] reg_data;
@@ -10,11 +9,11 @@ logic ps_data;
 
 modport in
 (
-    input valid, reg_write, reg_addr, reg_data, ps_write, ps_data
+    input reg_write, reg_addr, reg_data, ps_write, ps_data
 );
 modport out
 (
-    output valid, reg_write, reg_addr, reg_data, ps_write, ps_data
+    output reg_write, reg_addr, reg_data, ps_write, ps_data
 );
 endinterface
 
@@ -35,7 +34,6 @@ modport out
 endinterface
 
 interface branch_feedback_ifc;
-logic valid;
 logic branch;
 logic [`PC_SIZE - 1 : 0] pc;
 logic [`PC_SIZE - 1 : 0] predict_target;
@@ -45,11 +43,11 @@ logic feedback_taken;
 
 modport in
 (
-    input valid, branch, pc, predict_target, feedback_target, predict_taken, feedback_taken
+    input branch, pc, predict_target, feedback_target, predict_taken, feedback_taken
 );
 modport out
 (
-    output valid, branch, pc, predict_target, feedback_target, predict_taken, feedback_taken
+    output branch, pc, predict_target, feedback_target, predict_taken, feedback_taken
 );
 endinterface
 

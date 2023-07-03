@@ -19,6 +19,8 @@ module i2d_pr
     input logic clk,
     input logic n_rst,
 
+    pipeline_ctrl_ifc.in ctrl,
+
     pr_pass_ifc.in i_pr_pass,
     pr_pass_ifc.out o_pr_pass,
 
@@ -31,8 +33,12 @@ always_ff @(posedge clk) begin
         o_pr_pass.valid <= 1'b0;
     end
     else begin
-        o_pr_pass.valid <= i_pr_pass.valid;
-        o_pr_pass.pc <= i_pr_pass.pc;
+        if(~ctrl.retain) begin
+            o_pr_pass.valid <= i_pr_pass.valid & ~ctrl.clear;
+            o_pr_pass.pc <= i_pr_pass.pc;
+
+            o_instr <= i_instr;
+        end
     end
 end
 endmodule
@@ -41,6 +47,8 @@ module d2a_pr
 (
     input logic clk,
     input logic n_rst,
+
+    pipeline_ctrl_ifc.in ctrl,
 
     pr_pass_ifc.in i_pr_pass,
     pr_pass_ifc.out o_pr_pass,
@@ -63,22 +71,24 @@ always_ff @(posedge clk) begin
         o_pr_pass.valid <= 1'b0;
     end
     else begin
-        o_pr_pass.valid <= i_pr_pass.valid;
-        o_pr_pass.pc <= i_pr_pass.pc;
+        if(~ctrl.retain) begin
+            o_pr_pass.valid <= i_pr_pass.valid & ~ctrl.clear;
+            o_pr_pass.pc <= i_pr_pass.pc;
 
-        o_act_pass.mem_access <= i_act_pass.mem_access;
-        o_act_pass.reg_write <= i_act_pass.reg_write;
-        o_act_pass.reg_addr <= i_act_pass.reg_addr;
-        o_act_pass.ps_write <= i_act_pass.ps_write;
+            o_act_pass.mem_access <= i_act_pass.mem_access;
+            o_act_pass.reg_write <= i_act_pass.reg_write;
+            o_act_pass.reg_addr <= i_act_pass.reg_addr;
+            o_act_pass.ps_write <= i_act_pass.ps_write;
 
-        o_alu_input.op0 <= i_alu_input.op0;
-        o_alu_input.op1 <= i_alu_input.op1;
-        o_alu_input.alu_op <= i_alu_input.alu_op;
+            o_alu_input.op0 <= i_alu_input.op0;
+            o_alu_input.op1 <= i_alu_input.op1;
+            o_alu_input.alu_op <= i_alu_input.alu_op;
 
-        o_d_cache_input.mem_access <= o_d_cache_input.mem_access;
-        o_d_cache_input.address <= i_d_cache_input.address;
-        o_d_cache_input.mem_op <= i_d_cache_input.mem_op;
-        o_d_cache_input.data <= i_d_cache_input.data;
+            o_d_cache_input.mem_access <= o_d_cache_input.mem_access;
+            o_d_cache_input.address <= i_d_cache_input.address;
+            o_d_cache_input.mem_op <= i_d_cache_input.mem_op;
+            o_d_cache_input.data <= i_d_cache_input.data;
+        end
     end
 end
 endmodule
@@ -87,6 +97,8 @@ module a2w_pr
 (
     input logic clk,
     input logic n_rst,
+
+    pipeline_ctrl_ifc.in ctrl,
 
     pr_pass_ifc.in i_pr_pass,
     pr_pass_ifc.out o_pr_pass,
@@ -100,10 +112,16 @@ always_ff @(posedge clk) begin
         o_pr_pass.valid <= 1'b0;
     end
     else begin
-        o_pr_pass.valid <= i_pr_pass.valid;
-        o_pr_pass.pc <= i_pr_pass.pc;
-        o_writeback.reg_addr <= i_writeback.reg_addr;
-        o_writeback.data <= i_writeback.data;
+        if(~ctrl.retain) begin
+            o_pr_pass.valid <= i_pr_pass.valid & ~ctrl.clear;
+            o_pr_pass.pc <= i_pr_pass.pc;
+            
+            o_writeback.reg_write <= i_writeback.reg_write;
+            o_writeback.reg_addr <= i_writeback.reg_addr;
+            o_writeback.reg_data <= i_writeback.reg_data;
+            o_writeback.ps_write <= i_writeback.ps_write;
+            o_writeback.ps_data <= i_writeback.ps_data;
+        end
     end
 end
 endmodule

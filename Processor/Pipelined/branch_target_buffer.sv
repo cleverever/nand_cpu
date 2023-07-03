@@ -5,13 +5,14 @@ module branch_target_buffer
     input logic clk,
     input logic n_rst,
 
-    branch_feedback_ifc.in i_feedback,
-
     input logic [`PC_SIZE - 1 : 0] pc,
 
     output logic hit,
     output logic branch,
-    output logic [`PC_SIZE - 1 : 0] target
+    output logic [`PC_SIZE - 1 : 0] target,
+
+    input logic feedback_valid,
+    branch_feedback_ifc.in i_feedback
 );
 
 typedef struct packed
@@ -48,7 +49,7 @@ always_ff @(posedge clk) begin
         cache <= {default:'0};
     end
     else begin
-        if(i_feedback.valid) begin
+        if(feedback_valid) begin
             cache[fb_sel].valid <= 1'b1;
             cache[fb_sel].tag <= fb_sel_tag;
             cache[fb_sel].target <= i_feedback.feedback_target;
