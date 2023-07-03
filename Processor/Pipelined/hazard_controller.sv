@@ -14,6 +14,21 @@ modport out
 );
 endinterface
 
+interface fetch_ctrl_ifc;
+logic stall;
+logic pc_override;
+logic [`PC_SIZE - 1 : 0] target;
+
+modport in
+(
+    input pc_override, target
+);
+modport out
+(
+    output pc_override, target
+);
+endinterface
+
 module hazard_controller
 (
     branch_predictor_output_ifc.in i_branch_predictor,
@@ -35,5 +50,20 @@ always_comb begin
     o_fetch_ctrl.pc_override = mispredict | i_branch_predictor.pc_override;
     recovery_pc = i_feedback.feedback_taken? i_feedback.target : (i_feedback.pc + 1);
     o_fetch_ctrl.target = mispredict? recovery_pc : i_branch_predictor.target;
+end
+
+always_comb begin
+    o_i2d.retain = 1'b0;
+    o_i2d.clear = mispredict;
+end
+
+always_comb begin
+    o_d2a.retain = 1'b0;
+    o_d2a.clear = mispredict;
+end
+
+always_comb begin
+    o_a2w.retain = 1'b0;
+    o_a2w.clear = 1'b0;
 end
 endmodule

@@ -26,7 +26,7 @@ pipeline_ctrl_ifc d2a_ctrl();
 
 alu_input_ifc a_alu_input();
 d_alu_input_ifc a_d_cache_input();
-d_cache_ifc d_cache_output();
+d_cache_ifc a_d_cache_output();
 branch_feedback_ifc a_branch_feedback();
 writeback_ifc a_writeback();
 act_pass_ifc a_act_pass();
@@ -36,6 +36,8 @@ pipeline_ctrl_ifc a2w_ctrl();
 
 writeback_ifc w_writeback();
 pr_pass_ifc w_pr_pass();
+
+fetch_ctrl_ifc fetch_ctrl();
 
 //====================================================================================================
 //FETCH
@@ -47,8 +49,7 @@ fetch_unit FETCH_UNIT
 
     .interrupt_handler(),
 
-    .i_branch_controller(branch_controller),
-    .i_decoder(decoder_output),
+    .i_fetch_ctrl(fetch_ctrl),
 
     .pc(pc),
     .halted(halt)
@@ -173,14 +174,14 @@ d_cache D_CACHE
     .valid(a_pr_pass.valid),
     .in(a_d_cache_input),
 
-    .out(d_cache_output)
+    .out(a_d_cache_output)
 );
 
 action_glue ACTION_GLUE
 (
     .i_act_pass(a_act_pass),
     .i_alu_output(alu_output),
-    .i_d_cache_output(d_cache_output.data),
+    .i_d_cache_output(a_d_cache_output.data),
 
     .o_writeback(a_writeback)
 );
@@ -211,6 +212,6 @@ hazard_controller HAZARD_CONTROLLER
     .o_d2a(d2a_ctrl),
     .o_a2w(a2w_ctrl),
 
-    .o_fetch_ctrl()
+    .o_fetch_ctrl(fetch_ctrl)
 );
 endmodule
