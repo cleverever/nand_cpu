@@ -24,4 +24,32 @@ package nand_cpu_pkg;
         GSHARE
     }
     PredictorType;
+
+    typedef enum
+    {
+        READY,
+        REQUEST_WRITE,
+        WRITING,
+        REQUEST_READ,
+        READING
+    }
+    CacheState;
+
+    typedef enum
+    {
+        READY,
+        I_READING,
+        D_WRITING,
+        D_READY,
+        D_READING
+    }
+    MemState;
+
+    typedef enum
+    {
+        NONE,
+        READ,
+        WRITE
+    }
+    CacheRequest;
 endpackage
