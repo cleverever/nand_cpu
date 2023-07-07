@@ -34,6 +34,9 @@ module hazard_controller
     branch_predictor_output_ifc.in i_branch_predictor,
     branch_feedback_ifc.in i_feedback,
 
+    input logic i_cache_miss,
+    input logic d_cache_miss,
+
     pipeline_ctrl_ifc.out o_i2d,
     pipeline_ctrl_ifc.out o_d2a,
     pipeline_ctrl_ifc.out o_a2w,
@@ -53,17 +56,17 @@ always_comb begin
 end
 
 always_comb begin
-    o_i2d.retain = 1'b0;
-    o_i2d.clear = mispredict;
+    o_i2d.retain = d_cache_miss;
+    o_i2d.clear = mispredict | i_cache_miss;
 end
 
 always_comb begin
-    o_d2a.retain = 1'b0;
+    o_d2a.retain = d_cache_miss;
     o_d2a.clear = mispredict;
 end
 
 always_comb begin
     o_a2w.retain = 1'b0;
-    o_a2w.clear = 1'b0;
+    o_a2w.clear = d_cache_miss;
 end
 endmodule

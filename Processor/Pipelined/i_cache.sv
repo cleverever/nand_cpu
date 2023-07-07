@@ -1,5 +1,15 @@
 `include "nand_cpu.svh"
 
+typedef enum
+{
+    READY,
+    REQUEST_WRITE,
+    WRITING,
+    REQUEST_READ,
+    READING
+}
+CacheState;
+
 interface i_cache_request_ifc;
 logic req;
 logic ack;
@@ -18,13 +28,34 @@ modport memory
 );
 endinterface
 
+interface i_cache_output_ifc;
+logic hit;
+logic miss;
+logic [7 : 0] data;
+
+modport in
+(
+    input hit, miss, data
+);
+modport out
+(
+    output hit, miss, data
+);
+endinterface
+
 module i_cache #(parameter INDEX_BITS = 8)
 (
-    input logic unsigned [`PC_SIZE - 1 : 0] pc,
+    input logic clk,
+    input logic n_rst,
 
-    output logic hit,
-    output logic [7 : 0] instr
+    input logic valid,
+    input logic pc,
+
+    i_cache_output_ifc.out out,
+
+    cache_request_ifc.cache cache_request
 );
+
 localparam DATA_SIZE = 8;
 localparam OFFSET_BITS = $clog2(`CACHE_BLOCK_SIZE / DATA_SIZE);
 localparam TAG_BITS = 16 - INDEX_BITS - OFFSET_BITS;
@@ -46,8 +77,8 @@ DCacheLine;
 
 DCacheLine lines [INDEX_BITS - 1 : 0];
 
-nand_cpu_pkg::CacheState state;
-nand_cpu_pkg::CacheState next_state;
+CacheState state;
+CacheState next_state;
 
 always_ff @(posedge clk) begin
     if(~n_rst) begin

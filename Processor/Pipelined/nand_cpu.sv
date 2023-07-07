@@ -8,7 +8,8 @@ module nand_cpu
     output logic halt
 );
 
-logic [7 : 0] f_instr;
+i_cache_output_ifc f_i_cache_output();
+i_cache_request_ifc f_i_cache_request();
 logic f_instr_valid;
 branch_predictor_output_ifc f_branch_prediction();
 pr_pass_ifc f_pr_pass();
@@ -27,6 +28,7 @@ pipeline_ctrl_ifc d2a_ctrl();
 alu_input_ifc a_alu_input();
 d_alu_input_ifc a_d_cache_input();
 d_cache_ifc a_d_cache_output();
+d_cache_request_ifc a_d_cache_request();
 branch_feedback_ifc a_branch_feedback();
 writeback_ifc a_writeback();
 act_pass_ifc a_act_pass();
@@ -57,10 +59,12 @@ fetch_unit FETCH_UNIT
 
 i_cache I_CACHE
 (
+    .valid(f_instr_valid),
     .pc(pc),
 
-    .valid(f_instr_valid),
-    .instr(f_instr)
+    .out(f_i_cache_output),
+
+    .cache_request(f_i_cache_request)
 );
 
 branch_predictor branch_predictor
@@ -95,7 +99,7 @@ i2d_pr I2D_PR
     .i_pr_pass(f_pr_pass),
     .o_pr_pass(d_pr_pass),
 
-    .i_instr(f_instr),
+    .i_instr(f_i_cache.data),
     .o_instr(d_instr)
 );
 
@@ -174,7 +178,9 @@ d_cache D_CACHE
     .valid(a_pr_pass.valid),
     .in(a_d_cache_input),
 
-    .out(a_d_cache_output)
+    .out(a_d_cache_output),
+
+    .cache_request(a_d_cache_request)
 );
 
 action_glue ACTION_GLUE
@@ -200,6 +206,18 @@ a2w_pr A2W_PR
     .o_writeback(w_writeback)
 );
 
+//MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+//Memory
+//WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+memory MEMORY
+(
+    .clk,
+    .n_rst,
+
+    .r_i_cache(f_i_cache_request),
+    .r_d_cache(a_d_cache_request)
+);
+
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 //Hazard
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -208,6 +226,9 @@ hazard_controller HAZARD_CONTROLLER
     .i_branch_predictor(f_branch_prediction),
     .i_feedback(a_branch_feedback),
 
+    .i_cache_miss(f_i_cache_output.miss),
+    .d_cache_miss(a_d_cache_output.miss),
+    
     .o_i2d(i2d_ctrl),
     .o_d2a(d2a_ctrl),
     .o_a2w(a2w_ctrl),

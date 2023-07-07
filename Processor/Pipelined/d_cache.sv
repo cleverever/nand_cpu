@@ -1,5 +1,15 @@
 `include "nand_cpu.svh"
 
+typedef enum
+{
+    READY,
+    REQUEST_WRITE,
+    WRITING,
+    REQUEST_READ,
+    READING
+}
+CacheState;
+
 interface d_cache_request_ifc;
 nand_cpu_pkg::CacheRequest req;
 logic ack;
@@ -59,7 +69,7 @@ module d_cache #(parameter INDEX_BITS = 8)
     input logic valid,
     d_cache_input_ifc.in in,
 
-    d_cache_output_ifc.out out
+    d_cache_output_ifc.out out,
 
     cache_request_ifc.cache cache_request
 );
@@ -86,8 +96,8 @@ DCacheLine;
 
 DCacheLine lines [INDEX_BITS - 1 : 0];
 
-nand_cpu_pkg::CacheState state;
-nand_cpu_pkg::CacheState next_state;
+CacheState state;
+CacheState next_state;
 
 always_ff @(posedge clk) begin
     if(~n_rst) begin

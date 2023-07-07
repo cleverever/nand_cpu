@@ -1,3 +1,15 @@
+`include "nand_cpu.svh"
+
+typedef enum
+{
+    READY,
+    I_READING,
+    D_WRITING,
+    D_READY,
+    D_READING
+}
+MemState;
+
 module memory
 (
     input logic clk,
@@ -6,15 +18,15 @@ module memory
     i_cache_request_ifc.memory r_i_cache,
     d_cache_request_ifc.memory r_d_cache
 );
-
+localparam MEM_WIDTH = (`PC_SIZE > 16)? `PC_SIZE + 1 : 17;
 localparam COUNTER_SIZE = $clog2(`CACHE_BLOCK_SIZE / `MEM_TRANS_SIZE);
 
 logic [`CACHE_BLOCK_SIZE - 1 : 0] core [ADDR_BITS - 1 : 0];
 
 logic [COUNTER_SIZE - 1 : 0] counter;
 
-nand_cpu_pkg::MemState state;
-nand_cpu_pkg::MemState next_state;
+MemState state;
+MemState next_state;
 
 always_ff @(posedge clk) begin
     if(~n_rst) begin
@@ -30,7 +42,7 @@ always_ff @(posedge clk) begin
                 counter <= counter + 1;
             end
             D_WRITING: begin
-                core[TEMP][counter * MEM_TRANS_SIZE +: MEM_TRANS_SIZE] <= r_d_cache.data;
+                core[{1'b1, r_d_cache.address}][counter * MEM_TRANS_SIZE +: MEM_TRANS_SIZE] <= r_d_cache.data;
                 counter <= counter + 1;
             end
             D_READY: begin
@@ -62,7 +74,7 @@ always_comb begin
             end
         end
         I_READING: begin
-            r_i_cache.data = core[TEMP][counter * MEM_TRANS_SIZE +: MEM_TRANS_SIZE];
+            r_i_cache.data = core[{1'b0, r_i_cache.address}][counter * MEM_TRANS_SIZE +: MEM_TRANS_SIZE];
             if(&counter) begin
                 next_state = READY;
             end
@@ -79,7 +91,7 @@ always_comb begin
             end
         end
         D_READING: begin
-            r_d_cache.data = core[][counter * MEM_TRANS_SIZE +: MEM_TRANS_SIZE];
+            r_d_cache.data = core[{1'b1, r_d_cache.address}][counter * MEM_TRANS_SIZE +: MEM_TRANS_SIZE];
             if(&counter) begin
                 next_state = READY;
             end
