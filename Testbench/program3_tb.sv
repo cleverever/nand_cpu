@@ -37,7 +37,7 @@ endtask
 
 initial begin
     clk = 1'b0;
-    $readmemb("count_to.bin", DUT.I_MEM.core);
+    $readmemb("../../Testbench/count_to.bin", DUT.I_MEM.core);
     for(int i = 0; i < 10; i++)
     begin
         test(i[15 : 0]);

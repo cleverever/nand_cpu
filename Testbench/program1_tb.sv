@@ -40,7 +40,7 @@ logic [15 : 0] op1;
 
 initial begin
     clk = 1'b0;
-    $readmemb("add_short.bin", DUT.I_MEM.core);
+    $readmemb("../../Testbench/add_short.bin", DUT.I_MEM.core);
 
     for(int i = 0; i < 64; i++)
     begin

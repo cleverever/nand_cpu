@@ -1,6 +1,5 @@
-
-Testbench/transcript
-Testbench/nand_cpu.cr.mti
-Testbench/nand_cpu.mpf
-Testbench/vsim.wlf
-Testbench/work
+**/transcript
+**.cr.mti
+**.mpf
+**/vsim.wlf
+**/work
