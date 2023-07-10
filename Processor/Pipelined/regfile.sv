@@ -1,15 +1,15 @@
 interface regfile_output_ifc;
-logic [`DATA_WIDTH - 1 : 0] ra;
-logic [`DATA_WIDTH - 1 : 0] rt;
+logic [15 : 0] ra;
+logic [15 : 0] rt;
 logic ps;
 
-modport regfile
+modport in
+(
+    input ra, rt, ps
+);
+modport out
 (
     output ra, rt, ps
-);
-modport alu
-(
-    input ra, rt
 );
 endinterface
 
@@ -21,16 +21,17 @@ module regfile
     input logic writeback_valid,
     writeback_ifc.in i_writeback,
 
-    decoder_output_ifc.regfile i_reg_read,
+    input logic reg_read_valid,
+    decoder_output_ifc.out i_reg_read,
 
-    regfile_output_ifc.regfile out
+    regfile_output_ifc.out out
 );
 
-logic [`DATA_WIDTH - 1 : 0] regs [16];
+logic [15 : 0] regs [16];
 logic ps_reg;
 
 always_comb begin
-    if(i_reg_read.valid) begin
+    if(reg_read_valid) begin
         if(i_reg_read.use_ra) begin
             out.ra = regs[0];
         end

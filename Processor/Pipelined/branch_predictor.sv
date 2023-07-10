@@ -1,5 +1,11 @@
 `include "nand_cpu.svh"
 
+typedef enum
+{
+    GSHARE
+}
+PredictorType;
+
 interface branch_predictor_output_ifc;
 logic pc_override;
 logic [`PC_SIZE - 1 : 0] target;
@@ -28,6 +34,7 @@ module branch_predictor #(parameter TYPE = GSHARE)
     branch_feedback_ifc.in i_feedback
 );
 
+logic [`PC_SIZE - 1 : 0] target;
 branch_request_ifc request();
 logic hit;
 logic branch;
@@ -59,7 +66,7 @@ end
 
 generate
     case(TYPE)
-        GSHARE : branch_predictor_gshare #(INDEX_SIZE = 6) predictor
+        GSHARE : branch_predictor_gshare #(.INDEX_SIZE(6)) predictor
         (
             .clk,
             .n_rst,
@@ -69,7 +76,7 @@ generate
             .taken(taken),
 
             .feedback_valid(feedback_valid),
-            .feedback(feedback)
+            .feedback(i_feedback)
         );
     endcase
 endgenerate

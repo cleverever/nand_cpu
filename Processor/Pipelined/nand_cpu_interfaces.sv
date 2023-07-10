@@ -25,11 +25,11 @@ logic ps_write;
 
 modport in
 (
-    input valid, mem_access, reg_write, reg_addr, ps_write
+    input mem_access, reg_write, reg_addr, ps_write
 );
 modport out
 (
-    output valid, mem_access, reg_write, reg_addr, ps_write
+    output mem_access, reg_write, reg_addr, ps_write
 );
 endinterface
 
@@ -52,9 +52,9 @@ modport out
 endinterface
 
 interface branch_request_ifc;
-logic [`PC_SIZE - 1 : 0] pc,
+logic [`PC_SIZE - 1 : 0] pc;
 logic [`PC_SIZE - 1 : 0] target;
-logic ps,
+logic ps;
 
 modport in
 (

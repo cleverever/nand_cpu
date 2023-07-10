@@ -2,8 +2,10 @@
 
 module fetch_glue
 (
-    logic unsigned [`PC_SIZE - 1 : 0] i_pc,
-    logic instr_valid,
+    input logic unsigned [`PC_SIZE - 1 : 0] i_pc,
+    input logic instr_valid,
+
+    branch_predictor_output_ifc.in i_branch_predictor,
 
     pr_pass_ifc.out o_pr_pass
 );
@@ -11,6 +13,8 @@ module fetch_glue
 always_comb begin
     o_pr_pass.valid = instr_valid;
     o_pr_pass.pc = i_pc;
+    o_pr_pass.pc_override = i_branch_predictor.pc_override;
+    o_pr_pass.target = i_branch_predictor.target;
 end
 endmodule
 
@@ -43,9 +47,9 @@ always_comb begin
 
     o_branch_feedback.branch = i_decoder.branch;
     o_branch_feedback.pc = i_pr_pass.pc;
-    o_branch_feedback.predict_target = TEMP;
+    o_branch_feedback.predict_target = i_pr_pass.target;
     o_branch_feedback.feedback_target = i_regfile.rt;
-    o_branch_feedback.predict_taken = TEMP;
+    o_branch_feedback.predict_taken = i_pr_pass.pc_override;
     o_branch_feedback.feedback_taken = i_regfile.ps;
 end
 endmodule
@@ -53,8 +57,8 @@ endmodule
 module action_glue
 (
     act_pass_ifc.in i_act_pass,
-    logic [15 : 0] i_alu_output,
-    logic [15 : 0] i_d_cache_output,
+    input logic [15 : 0] i_alu_output,
+    input logic [15 : 0] i_d_cache_output,
 
     writeback_ifc.out o_writeback
 );

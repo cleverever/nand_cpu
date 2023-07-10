@@ -21,26 +21,24 @@ always_ff @(posedge clk) begin
     end
     else begin
         if(~halted) begin
-            if(i_decoder.halt) begin
+            if(i_fetch_ctrl.halt) begin
                 halted <= 1'b1;
             end
             else begin
-                if(~i_fetch_ctrl.stall) begin
-                    if(i_decoder.interrupt) begin
-                        if(i_decoder.immdt == 0) begin
-                            pc <= int_return_pc;
-                        end
-                        else begin
-                            pc <= interrupt_handler[i_decoder.immdt];
-                            int_return_pc <= pc + 1;
-                        end
-                    end
-                    else if(i_fetch_ctrl.pc_override) begin
-                        pc <= i_fetch_ctrl.target;
+                if(i_fetch_ctrl.interrupt) begin
+                    if(i_fetch_ctrl.int_code == 0) begin
+                        pc <= int_return_pc;
                     end
                     else begin
-                        pc <= pc + 1;
+                        pc <= interrupt_handler[i_fetch_ctrl.int_code];
+                        int_return_pc <= pc + 1;
                     end
+                end
+                else if(i_fetch_ctrl.pc_override) begin
+                    pc <= i_fetch_ctrl.target;
+                end
+                else if(~i_fetch_ctrl.stall) begin
+                    pc <= pc + 1;
                 end
             end
         end

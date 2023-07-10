@@ -14,42 +14,16 @@ package nand_cpu_pkg;
 
     typedef enum logic
     {
-        READ,
-        WRITE
+        MEM_READ,
+        MEM_WRITE
     }
     MemOp;
 
     typedef enum
     {
-        GSHARE
-    }
-    PredictorType;
-
-    typedef enum
-    {
-        READY,
-        REQUEST_WRITE,
-        WRITING,
-        REQUEST_READ,
-        READING
-    }
-    CacheState;
-
-    typedef enum
-    {
-        READY,
-        I_READING,
-        D_WRITING,
-        D_READY,
-        D_READING
-    }
-    MemState;
-
-    typedef enum
-    {
-        NONE,
-        READ,
-        WRITE
+        REQ_NONE,
+        REQ_READ,
+        REQ_WRITE
     }
     CacheRequest;
 endpackage

@@ -8,17 +8,19 @@ module nand_cpu
     output logic halt
 );
 
+logic [`PC_SIZE - 1 : 0] pc;
 i_cache_output_ifc f_i_cache_output();
 i_cache_request_ifc f_i_cache_request();
-logic f_instr_valid;
 branch_predictor_output_ifc f_branch_prediction();
 pr_pass_ifc f_pr_pass();
 
 pipeline_ctrl_ifc i2d_ctrl();
 
 logic [7 : 0] d_instr;
+decoder_output_ifc d_decoder_output();
+regfile_output_ifc d_regfile_output();
 alu_input_ifc d_alu_input();
-d_alu_input_ifc d_d_cache_input();
+d_cache_input_ifc d_d_cache_input();
 branch_feedback_ifc d_branch_feedback();
 act_pass_ifc d_act_pass();
 pr_pass_ifc d_pr_pass();
@@ -26,8 +28,9 @@ pr_pass_ifc d_pr_pass();
 pipeline_ctrl_ifc d2a_ctrl();
 
 alu_input_ifc a_alu_input();
-d_alu_input_ifc a_d_cache_input();
-d_cache_ifc a_d_cache_output();
+logic [15 : 0] alu_output;
+d_cache_input_ifc a_d_cache_input();
+d_cache_output_ifc a_d_cache_output();
 d_cache_request_ifc a_d_cache_request();
 branch_feedback_ifc a_branch_feedback();
 writeback_ifc a_writeback();
@@ -59,7 +62,9 @@ fetch_unit FETCH_UNIT
 
 i_cache I_CACHE
 (
-    .valid(f_instr_valid),
+    .clk,
+    .n_rst,
+
     .pc(pc),
 
     .out(f_i_cache_output),
@@ -73,7 +78,7 @@ branch_predictor branch_predictor
     .n_rst,
     
     .pc(pc),
-    .ps(regfile_output.ps_data),
+    .ps(d_regfile_output.ps),
     
     .out(f_branch_prediction),
 
@@ -84,7 +89,9 @@ branch_predictor branch_predictor
 fetch_glue FETCH_GLUE
 (
     .i_pc(pc),
-    .instr_valid(f_instr_valid),
+    .instr_valid(~(fetch_ctrl.stall | halt)),
+
+    .i_branch_predictor(f_branch_prediction),
 
     .o_pr_pass(f_pr_pass)
 );
@@ -99,7 +106,7 @@ i2d_pr I2D_PR
     .i_pr_pass(f_pr_pass),
     .o_pr_pass(d_pr_pass),
 
-    .i_instr(f_i_cache.data),
+    .i_instr(f_i_cache_output.data),
     .o_instr(d_instr)
 );
 
@@ -110,7 +117,7 @@ decoder DECODER
 (
     .instr(d_instr),
     
-    .out(decoder_output)
+    .out(d_decoder_output)
 );
 
 regfile REGFILE
@@ -121,20 +128,22 @@ regfile REGFILE
     .writeback_valid(w_pr_pass.valid),
     .i_writeback(w_writeback),
 
-    .i_reg_read(decoder_output),
+    .reg_read_valid(d_pr_pass.valid),
+    .i_reg_read(d_decoder_output),
 
-    .out(regfile_output)
+    .out(d_regfile_output)
 );
 
 decode_glue DECODE_GLUE
 (
-    .i_decoder(decoder_output),
-    .i_regfile(regfile_output),
+    .i_pr_pass(f_pr_pass),
+    .i_decoder(d_decoder_output),
+    .i_regfile(d_regfile_output),
 
     .o_act_pass(d_act_pass),
     .o_alu_input(d_alu_input),
     .o_d_cache_input(d_d_cache_input),
-    .o_branch_feedback_ifc(d_branch_feedback)
+    .o_branch_feedback(d_branch_feedback)
 );
 
 d2a_pr D2A_PR
@@ -212,7 +221,6 @@ a2w_pr A2W_PR
 memory MEMORY
 (
     .clk,
-    .n_rst,
 
     .r_i_cache(f_i_cache_request),
     .r_d_cache(a_d_cache_request)
@@ -226,9 +234,13 @@ hazard_controller HAZARD_CONTROLLER
     .i_branch_predictor(f_branch_prediction),
     .i_feedback(a_branch_feedback),
 
-    .i_cache_miss(f_i_cache_output.miss),
+    .i_cache_miss(~f_i_cache_output.hit),
     .d_cache_miss(a_d_cache_output.miss),
-    
+
+    .i_i2d(d_pr_pass),
+    .i_d2a(a_pr_pass),
+    .i_a2w(w_pr_pass),
+
     .o_i2d(i2d_ctrl),
     .o_d2a(d2a_ctrl),
     .o_a2w(a2w_ctrl),

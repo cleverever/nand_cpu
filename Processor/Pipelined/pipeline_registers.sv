@@ -2,15 +2,20 @@
 
 interface pr_pass_ifc;
 logic valid;
+logic halt;
+logic interrupt;
+logic [3 : 0] int_code;
 logic unsigned [`PC_SIZE - 1 : 0] pc;
+logic pc_override;
+logic [`PC_SIZE - 1 : 0] target;
 
 modport in
 (
-    input valid, pc
+    input valid, halt, interrupt, int_code, pc, pc_override, target
 );
 modport out
 (
-    output valid, pc
+    output valid, halt, interrupt, int_code, pc, pc_override, target
 );
 endinterface
 
@@ -24,8 +29,8 @@ module i2d_pr
     pr_pass_ifc.in i_pr_pass,
     pr_pass_ifc.out o_pr_pass,
 
-    input logic i_instr,
-    output logic o_instr
+    input logic [7 : 0] i_instr,
+    output logic [7 : 0] o_instr
 );
 
 always_ff @(posedge clk) begin
@@ -35,7 +40,12 @@ always_ff @(posedge clk) begin
     else begin
         if(~ctrl.retain) begin
             o_pr_pass.valid <= i_pr_pass.valid & ~ctrl.clear;
+            o_pr_pass.halt <= i_pr_pass.halt;
+            o_pr_pass.interrupt <= i_pr_pass.interrupt;
+            o_pr_pass.int_code <= i_pr_pass.int_code;
             o_pr_pass.pc <= i_pr_pass.pc;
+            o_pr_pass.pc_override <= i_pr_pass.pc_override;
+            o_pr_pass.target <= i_pr_pass.target;
 
             o_instr <= i_instr;
         end
@@ -60,10 +70,10 @@ module d2a_pr
     alu_input_ifc.out o_alu_input,
 
     d_cache_input_ifc.in i_d_cache_input,
-    d_cache_input_ifc.out o_d_cache_input
+    d_cache_input_ifc.out o_d_cache_input,
 
-    o_branch_feedback_ifc.in i_branch_feedback,
-    o_branch_feedback_ifc.out o_branch_feedback,
+    branch_feedback_ifc.in i_branch_feedback,
+    branch_feedback_ifc.out o_branch_feedback
 );
 
 always_ff @(posedge clk) begin
@@ -73,7 +83,12 @@ always_ff @(posedge clk) begin
     else begin
         if(~ctrl.retain) begin
             o_pr_pass.valid <= i_pr_pass.valid & ~ctrl.clear;
+            o_pr_pass.halt <= i_pr_pass.halt;
+            o_pr_pass.interrupt <= i_pr_pass.interrupt;
+            o_pr_pass.int_code <= i_pr_pass.int_code;
             o_pr_pass.pc <= i_pr_pass.pc;
+            o_pr_pass.pc_override <= i_pr_pass.pc_override;
+            o_pr_pass.target <= i_pr_pass.target;
 
             o_act_pass.mem_access <= i_act_pass.mem_access;
             o_act_pass.reg_write <= i_act_pass.reg_write;
@@ -114,7 +129,12 @@ always_ff @(posedge clk) begin
     else begin
         if(~ctrl.retain) begin
             o_pr_pass.valid <= i_pr_pass.valid & ~ctrl.clear;
+            o_pr_pass.halt <= i_pr_pass.halt;
+            o_pr_pass.interrupt <= i_pr_pass.interrupt;
+            o_pr_pass.int_code <= i_pr_pass.int_code;
             o_pr_pass.pc <= i_pr_pass.pc;
+            o_pr_pass.pc_override <= i_pr_pass.pc_override;
+            o_pr_pass.target <= i_pr_pass.target;
             
             o_writeback.reg_write <= i_writeback.reg_write;
             o_writeback.reg_addr <= i_writeback.reg_addr;

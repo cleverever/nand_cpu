@@ -19,27 +19,26 @@ logic [`MEM_TRANS_SIZE - 1 : 0] data;
 modport cache
 (
     input ack, data,
-    output ack, address
+    output req, address
 );
 modport memory
 (
-    input ack, address,
+    input req, address,
     output ack, data
 );
 endinterface
 
 interface i_cache_output_ifc;
 logic hit;
-logic miss;
 logic [7 : 0] data;
 
 modport in
 (
-    input hit, miss, data
+    input hit, data
 );
 modport out
 (
-    output hit, miss, data
+    output hit, data
 );
 endinterface
 
@@ -48,12 +47,11 @@ module i_cache #(parameter INDEX_BITS = 8)
     input logic clk,
     input logic n_rst,
 
-    input logic valid,
-    input logic pc,
+    input logic [`PC_SIZE - 1 : 0] pc,
 
     i_cache_output_ifc.out out,
 
-    cache_request_ifc.cache cache_request
+    i_cache_request_ifc.cache cache_request
 );
 
 localparam DATA_SIZE = 8;
@@ -71,7 +69,7 @@ typedef struct packed
 {
     logic valid;
     logic [TAG_BITS - 1 : 0] tag;
-    logic [CACHE_BLOCK_SIZE - 1 : 0] data;
+    logic [`CACHE_BLOCK_SIZE - 1 : 0] data;
 }
 DCacheLine;
 
@@ -83,18 +81,19 @@ CacheState next_state;
 always_ff @(posedge clk) begin
     if(~n_rst) begin
         lines <= {default:'0};
+        state <= READY;
     end
     else begin
         state <= next_state;
         case(state)
             READY: begin
             end
-            READ_REQUEST: begin
+            REQUEST_READ: begin
                 counter <= 0;
             end
             READING: begin
                 counter <= counter + 1;
-                lines[index].data[counter * MEM_TRANS_SIZE +: MEM_TRANS_SIZE] <= cache_request.data;
+                lines[index].data[counter * `MEM_TRANS_SIZE +: `MEM_TRANS_SIZE] <= cache_request.data;
                 if(&counter) begin
                     lines[index].valid <= 1'b1;
                     lines[index].tag <= tag;
@@ -105,29 +104,31 @@ always_ff @(posedge clk) begin
 end
 
 always_comb begin
-    offset = address[OFFSET_BITS - 1 : 0];
-    index = address[INDEX_BITS + OFFSET_BITS - 1 : OFFSET_BITS];
-    tag = address[TAG_BITS + INDEX_BITS + OFFSET_BITS - 1 : INDEX_BITS + OFFSET_BITS];
+    cache_request.address = pc;
+
+    offset = pc[OFFSET_BITS - 1 : 0];
+    index = pc[INDEX_BITS + OFFSET_BITS - 1 : OFFSET_BITS];
+    tag = pc[TAG_BITS + INDEX_BITS + OFFSET_BITS - 1 : INDEX_BITS + OFFSET_BITS];
 
     next_state = state;
     case(state)
         READY: begin
-            out.hit = valid & lines[index].valid & (lines[index].tag == tag);
-            out.miss = valid & ~(lines[index].valid & (lines[index].tag == tag));
-            if(miss) begin
-                next_state = READ_REQUEST;
+            out.hit = lines[index].valid & (lines[index].tag == tag);
+            cache_request.req = 1'b0;
+            if(~out.hit) begin
+                next_state = REQUEST_READ;
             end
         end
-        READ_REQUEST: begin
+        REQUEST_READ: begin
             out.hit = 1'b0;
-            out.miss = 1'b1;
+            cache_request.req = 1'b1;
             if(cache_request.ack) begin
                 next_state = READING;
             end
         end
         READING: begin
             out.hit = 1'b0;
-            out.miss = 1'b1;
+            cache_request.req = 1'b0;
             if(&counter) begin
                 next_state = READY;
             end

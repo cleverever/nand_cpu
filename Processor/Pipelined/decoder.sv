@@ -17,7 +17,7 @@ logic [3 : 0] immdt;
 logic [5 : 4] shift;
 
 logic mem_access;
-nand_cpu_pkg::MEM_OP mem_op;
+nand_cpu_pkg::MemOp mem_op;
 
 logic jump;
 logic branch;
@@ -25,7 +25,7 @@ logic branch;
 logic interrupt;
 logic halt;
 
-nand_cpu_pkg::ALU_OP alu_op;
+nand_cpu_pkg::AluOp alu_op;
 
 modport in
 (
@@ -43,7 +43,7 @@ module decoder
 (
     input logic [7 : 0] instr,
 
-    decoder_output_ifc.decoder out
+    decoder_output_ifc.out out
 );
 
 always_comb begin
@@ -140,7 +140,7 @@ always_comb begin
             out.use_rw = 1'b1;
             out.use_immdt = 1'b0;
             out.mem_access = 1'b1;
-            out.mem_op = READ;
+            out.mem_op = MEM_READ;
         end
         8'b1101???? : begin //ST
             out.use_ra = 1'b1;
@@ -148,7 +148,7 @@ always_comb begin
             out.use_rw = 1'b0;
             out.use_immdt = 1'b0;
             out.mem_access = 1'b1;
-            out.mem_op = WRITE;
+            out.mem_op = MEM_WRITE;
         end
         8'b1110???? : begin //INT
             out.use_ra = 1'b0;

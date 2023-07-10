@@ -14,19 +14,18 @@ interface d_cache_request_ifc;
 nand_cpu_pkg::CacheRequest req;
 logic ack;
 logic [15 - $clog2(`CACHE_BLOCK_SIZE) : 0] address;
-logic [`MEM_TRANS_SIZE - 1 : 0] data;
+logic [`MEM_TRANS_SIZE - 1 : 0] r_data;
+logic [`MEM_TRANS_SIZE - 1 : 0] w_data;
 
 modport cache
 (
-    input ack,
-    inout data,
-    output req, address
+    input ack, r_data,
+    output req, address, w_data
 );
 modport memory
 (
-    input req, address,
-    inout data,
-    output ack
+    input req, address, w_data,
+    output ack, r_data
 );
 endinterface
 
@@ -71,7 +70,7 @@ module d_cache #(parameter INDEX_BITS = 8)
 
     d_cache_output_ifc.out out,
 
-    cache_request_ifc.cache cache_request
+    d_cache_request_ifc.cache cache_request
 );
 
 localparam DATA_SIZE = 16;
@@ -90,7 +89,7 @@ typedef struct packed
     logic valid;
     logic dirty;
     logic [TAG_BITS - 1 : 0] tag;
-    logic [CACHE_BLOCK_SIZE - 1 : 0] data;
+    logic [`CACHE_BLOCK_SIZE - 1 : 0] data;
 }
 DCacheLine;
 
@@ -108,7 +107,7 @@ always_ff @(posedge clk) begin
         case(state)
             READY: begin
             end
-            WRITE_REQUEST: begin
+            REQUEST_WRITE: begin
                 counter <= 0;
             end
             WRITING: begin
@@ -117,12 +116,12 @@ always_ff @(posedge clk) begin
                     lines[index].dirty <= 1'b0;
                 end
             end
-            READ_REQUEST: begin
+            REQUEST_READ: begin
                 counter <= 0;
             end
             READING: begin
                 counter <= counter + 1;
-                lines[index].data[counter * MEM_TRANS_SIZE +: MEM_TRANS_SIZE] <= cache_request.data;
+                lines[index].data[counter * `MEM_TRANS_SIZE +: `MEM_TRANS_SIZE] <= cache_request.r_data;
                 if(&counter) begin
                     lines[index].valid <= 1'b1;
                     lines[index].tag <= tag;
@@ -133,30 +132,30 @@ always_ff @(posedge clk) begin
 end
 
 always_comb begin
-    offset = address[OFFSET_BITS - 1 : 0];
-    index = address[INDEX_BITS + OFFSET_BITS - 1 : OFFSET_BITS];
-    tag = address[TAG_BITS + INDEX_BITS + OFFSET_BITS - 1 : INDEX_BITS + OFFSET_BITS];
+    offset = in.address[OFFSET_BITS - 1 : 0];
+    index = in.address[INDEX_BITS + OFFSET_BITS - 1 : OFFSET_BITS];
+    tag = in.address[TAG_BITS + INDEX_BITS + OFFSET_BITS - 1 : INDEX_BITS + OFFSET_BITS];
 
     next_state = state;
-    cache_request.data = 'z;
-    cache_request.req = NONE;
+    cache_request.req = REQ_NONE;
     case(state)
         READY: begin
             out.hit = valid & lines[index].valid & (lines[index].tag == tag);
             out.miss = valid & ~(lines[index].valid & (lines[index].tag == tag));
-            if(miss) begin
+            cache_request.req = REQ_NONE;
+            if(out.miss) begin
                 if(lines[index].dirty) begin
-                    next_state = WRITE_REQUEST;
+                    next_state = REQUEST_WRITE;
                 end
                 else begin
-                    next_state = READ_REQUEST;
+                    next_state = REQUEST_READ;
                 end
             end
         end
-        WRITE_REQUEST: begin
+        REQUEST_WRITE: begin
             out.hit = 1'b0;
             out.miss = 1'b1;
-            cache_request.req = WRITE;
+            cache_request.req = REQ_WRITE;
             if(cache_request.ack) begin
                 next_state = WRITING;
             end
@@ -164,15 +163,16 @@ always_comb begin
         WRITING: begin
             out.hit = 1'b0;
             out.miss = 1'b1;
-            cache_request.data = lines[index].data[counter * MEM_TRANS_SIZE +: MEM_TRANS_SIZE];
+            cache_request.req = REQ_NONE;
+            cache_request.w_data = lines[index].data[counter * `MEM_TRANS_SIZE +: `MEM_TRANS_SIZE];
             if(&counter) begin
-                next_state = READ_REQUEST;
+                next_state = REQUEST_READ;
             end
         end
-        READ_REQUEST: begin
+        REQUEST_READ: begin
             out.hit = 1'b0;
             out.miss = 1'b1;
-            cache_request.req = READ;
+            cache_request.req = REQ_READ;
             if(cache_request.ack) begin
                 next_state = READING;
             end
@@ -180,6 +180,7 @@ always_comb begin
         READING: begin
             out.hit = 1'b0;
             out.miss = 1'b1;
+            cache_request.req = REQ_NONE;
             if(&counter) begin
                 next_state = READY;
             end
