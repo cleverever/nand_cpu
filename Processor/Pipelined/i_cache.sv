@@ -104,16 +104,17 @@ always_ff @(posedge clk) begin
 end
 
 always_comb begin
-    cache_request.address = pc;
-
     offset = pc[OFFSET_BITS - 1 : 0];
     index = pc[INDEX_BITS + OFFSET_BITS - 1 : OFFSET_BITS];
     tag = pc[TAG_BITS + INDEX_BITS + OFFSET_BITS - 1 : INDEX_BITS + OFFSET_BITS];
+
+    cache_request.address = {tag, index};
 
     next_state = state;
     case(state)
         READY: begin
             out.hit = lines[index].valid & (lines[index].tag == tag);
+            out.data = lines[index].data[(`CACHE_BLOCK_SIZE - 1) - (offset * 8) -: 8];
             cache_request.req = 1'b0;
             if(~out.hit) begin
                 next_state = REQUEST_READ;

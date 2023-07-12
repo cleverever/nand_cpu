@@ -140,8 +140,8 @@ always_comb begin
     cache_request.req = REQ_NONE;
     case(state)
         READY: begin
-            out.hit = valid & lines[index].valid & (lines[index].tag == tag);
-            out.miss = valid & ~(lines[index].valid & (lines[index].tag == tag));
+            out.hit = valid & in.mem_access & lines[index].valid & (lines[index].tag == tag);
+            out.miss = valid & in.mem_access & ~(lines[index].valid & (lines[index].tag == tag));
             cache_request.req = REQ_NONE;
             if(out.miss) begin
                 if(lines[index].dirty) begin
