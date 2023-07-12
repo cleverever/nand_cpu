@@ -99,10 +99,17 @@ always_ff @(posedge clk) begin
             o_alu_input.op1 <= i_alu_input.op1;
             o_alu_input.alu_op <= i_alu_input.alu_op;
 
-            o_d_cache_input.mem_access <= o_d_cache_input.mem_access;
+            o_d_cache_input.mem_access <= i_d_cache_input.mem_access;
             o_d_cache_input.address <= i_d_cache_input.address;
             o_d_cache_input.mem_op <= i_d_cache_input.mem_op;
             o_d_cache_input.data <= i_d_cache_input.data;
+
+            o_branch_feedback.branch <= i_branch_feedback.branch;
+            o_branch_feedback.pc <= i_branch_feedback.pc;
+            o_branch_feedback.predict_target <= i_branch_feedback.predict_target;
+            o_branch_feedback.feedback_target <= i_branch_feedback.feedback_target;
+            o_branch_feedback.predict_taken <= i_branch_feedback.predict_taken;
+            o_branch_feedback.feedback_taken <= i_branch_feedback.feedback_taken;
         end
     end
 end

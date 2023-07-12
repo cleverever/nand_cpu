@@ -24,6 +24,7 @@ module decode_glue
     decoder_output_ifc.in i_decoder,
     regfile_output_ifc.in i_regfile,
 
+    pr_pass_ifc.out o_pr_pass,
     act_pass_ifc.out o_act_pass,
     alu_input_ifc.out o_alu_input,
     d_cache_input_ifc.out o_d_cache_input,
@@ -31,10 +32,18 @@ module decode_glue
 );
 
 always_comb begin
-    o_act_pass.mem_access <= i_decoder.mem_access;
-    o_act_pass.reg_write <= i_decoder.use_rw;
-    o_act_pass.reg_addr <= i_decoder.rw_addr;
-    o_act_pass.ps_write <= i_decoder.write_ps;
+    o_pr_pass.valid = i_pr_pass.valid;
+    o_pr_pass.halt = i_decoder.halt;
+    o_pr_pass.interrupt = i_decoder.interrupt;
+    o_pr_pass.int_code = i_decoder.immdt;
+    o_pr_pass.pc = i_pr_pass.pc;
+    o_pr_pass.pc_override = i_pr_pass.pc_override;
+    o_pr_pass.target = i_pr_pass.target;
+
+    o_act_pass.mem_access = i_decoder.mem_access;
+    o_act_pass.reg_write = i_decoder.use_rw;
+    o_act_pass.reg_addr = i_decoder.rw_addr;
+    o_act_pass.ps_write = i_decoder.write_ps;
 
     o_alu_input.op0 = i_regfile.ra;
     o_alu_input.op1 = i_decoder.use_immdt? {10'b0000000000, i_decoder.shift, i_decoder.immdt} : i_regfile.rt;
@@ -50,7 +59,7 @@ always_comb begin
     o_branch_feedback.predict_target = i_pr_pass.target;
     o_branch_feedback.feedback_target = i_regfile.rt;
     o_branch_feedback.predict_taken = i_pr_pass.pc_override;
-    o_branch_feedback.feedback_taken = i_regfile.ps;
+    o_branch_feedback.feedback_taken = i_decoder.jump | (i_decoder.branch & i_regfile.ps);
 end
 endmodule
 

@@ -24,6 +24,7 @@ d_cache_input_ifc d_d_cache_input();
 branch_feedback_ifc d_branch_feedback();
 act_pass_ifc d_act_pass();
 pr_pass_ifc d_pr_pass();
+pr_pass_ifc d2_pr_pass();
 
 pipeline_ctrl_ifc d2a_ctrl();
 
@@ -136,10 +137,11 @@ regfile REGFILE
 
 decode_glue DECODE_GLUE
 (
-    .i_pr_pass(f_pr_pass),
+    .i_pr_pass(d_pr_pass),
     .i_decoder(d_decoder_output),
     .i_regfile(d_regfile_output),
 
+    .o_pr_pass(d2_pr_pass),
     .o_act_pass(d_act_pass),
     .o_alu_input(d_alu_input),
     .o_d_cache_input(d_d_cache_input),
@@ -153,7 +155,7 @@ d2a_pr D2A_PR
 
     .ctrl(d2a_ctrl),
 
-    .i_pr_pass(d_pr_pass),
+    .i_pr_pass(d2_pr_pass),
     .o_pr_pass(a_pr_pass),
 
     .i_act_pass(d_act_pass),
