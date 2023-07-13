@@ -1,8 +1,8 @@
 `include "nand_cpu.svh"
 
 interface alu_input_ifc;
-logic op0;
-logic op1;
+logic [15 : 0] op0;
+logic [15 : 0] op1;
 nand_cpu_pkg::AluOp alu_op;
 
 modport in
