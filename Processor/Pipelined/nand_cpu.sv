@@ -35,12 +35,14 @@ d_cache_input_ifc a_d_cache_input();
 d_cache_output_ifc a_d_cache_output();
 d_cache_request_ifc a_d_cache_request();
 branch_feedback_ifc a_branch_feedback();
+forward_data_ifc a_forward();
 writeback_ifc a_writeback();
 act_pass_ifc a_act_pass();
 pr_pass_ifc a_pr_pass();
 
 pipeline_ctrl_ifc a2w_ctrl();
 
+forward_data_ifc w_forward();
 writeback_ifc w_writeback();
 pr_pass_ifc w_pr_pass();
 
@@ -146,6 +148,8 @@ decode_glue DECODE_GLUE
     .i_decoder(d_decoder_output),
     .i_regfile(d_regfile_output),
 
+    .a_forward(a_forward),
+    .w_forward(w_forward),
     .o_pr_pass(d2_pr_pass),
     .o_act_pass(d_act_pass),
     .o_alu_input(d_alu_input),
@@ -205,6 +209,7 @@ action_glue ACTION_GLUE
     .i_alu_output(alu_output),
     .i_d_cache_output(a_d_cache_output.data),
 
+    .o_forward(a_forward),
     .o_writeback(a_writeback)
 );
 
@@ -217,6 +222,9 @@ a2w_pr A2W_PR
 
     .i_pr_pass(a_pr_pass),
     .o_pr_pass(w_pr_pass),
+
+    .i_forward(a_forward),
+    .o_forward(w_forward),
 
     .i_writeback(a_writeback),
     .o_writeback(w_writeback)

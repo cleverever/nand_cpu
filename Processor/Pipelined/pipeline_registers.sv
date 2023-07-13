@@ -125,6 +125,9 @@ module a2w_pr
     pr_pass_ifc.in i_pr_pass,
     pr_pass_ifc.out o_pr_pass,
 
+    forward_data_ifc.in i_forward,
+    forward_data_ifc.out o_forward,
+
     writeback_ifc.in i_writeback,
     writeback_ifc.in o_writeback
 );
@@ -142,6 +145,12 @@ always_ff @(posedge clk) begin
             o_pr_pass.pc <= i_pr_pass.pc;
             o_pr_pass.pc_override <= i_pr_pass.pc_override;
             o_pr_pass.target <= i_pr_pass.target;
+
+            o_forward.use_rw <= i_forward.use_rw;
+            o_forward.rw_addr <= i_forward.rw_addr;
+            o_forward.rw_data <= i_forward.rw_data;
+            o_forward.write_ps <= i_forward.write_ps;
+            o_forward.ps_data <= i_forward.ps_data;
             
             o_writeback.reg_write <= i_writeback.reg_write;
             o_writeback.reg_addr <= i_writeback.reg_addr;
