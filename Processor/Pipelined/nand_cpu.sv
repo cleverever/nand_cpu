@@ -12,6 +12,7 @@ logic [`PC_SIZE - 1 : 0] pc;
 i_cache_output_ifc f_i_cache_output();
 i_cache_request_ifc f_i_cache_request();
 branch_predictor_output_ifc f_branch_prediction();
+logic predictor_use_ps;
 pr_pass_ifc f_pr_pass();
 
 pipeline_ctrl_ifc i2d_ctrl();
@@ -79,6 +80,8 @@ branch_predictor branch_predictor
     .n_rst,
     
     .pc(pc),
+
+    .use_ps(predictor_use_ps),
     .ps(d_regfile_output.ps),
     
     .out(f_branch_prediction),
@@ -132,6 +135,8 @@ regfile REGFILE
     .reg_read_valid(d_pr_pass.valid),
     .i_reg_read(d_decoder_output),
 
+    .i_bp_ps(predictor_use_ps),
+    
     .out(d_regfile_output)
 );
 

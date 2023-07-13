@@ -8,9 +8,9 @@ logic done;
 
 localparam MEM_WIDTH = (`PC_SIZE - 1 > 16)? `PC_SIZE : 17;
 localparam INSTR_OFFSET = 0;
-localparam DATA_OFFSET = MEM_WIDTH / 2;
-localparam BYTES = (2 ** ((`PC_SIZE - 1 > 16)? `PC_SIZE : 17)) * (`CACHE_BLOCK_SIZE / 8);
-logic [7 : 0] machine_code [BYTES];
+localparam BYTES = (2 ** (MEM_WIDTH + 1));
+localparam DATA_OFFSET = 2 ** (MEM_WIDTH - $clog2(`CACHE_BLOCK_SIZE / 16) - 1);
+logic [7 : 0] machine_code [BYTES / 2];
 
 nand_cpu DUT
 (
@@ -32,15 +32,15 @@ task test
     pwr = 1'b0;
     #40ns;
     pwr = 1'b1;
-    DUT.MEMORY.core[DATA_OFFSET + 0][31 : 0] = {op0, op1};
+    DUT.MEMORY.core[DATA_OFFSET][31 : 0] = {op0, op1};
     wait(done);
-    assert ({core_b[BYTES/2 + 5], core_b[BYTES/2 + 4]} == sum) begin
+    assert (DUT.MEMORY.core[DATA_OFFSET][47 : 32] == sum) begin
         $display("TEST PASSED - %d + %d", op0, op1);
     end
     else begin
         $display("TEST FAILED - %d + %d", op0, op1);
         $display("Expected sum: %0b", sum);
-        $display("Actual sum:   %0b", {core_b[BYTES/2 + 5], core_b[BYTES/2 + 4]});
+        $display("Actual sum:   %0b", DUT.MEMORY.core[DATA_OFFSET][47 : 32]);
     end
 endtask
 
@@ -50,6 +50,7 @@ logic [15 : 0] op1;
 
 initial begin
     clk = 1'b0;
+    machine_code = '{default:'0};
     $readmemb("../../Testbench/add_short.bin", machine_code);
     DUT.MEMORY.core = {>>`CACHE_BLOCK_SIZE{machine_code}};
 

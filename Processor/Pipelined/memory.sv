@@ -17,12 +17,12 @@ module memory
     i_cache_request_ifc.memory r_i_cache,
     d_cache_request_ifc.memory r_d_cache
 );
-localparam WIDTH = (`PC_SIZE - 1 > 16)? `PC_SIZE : 17;
+localparam WIDTH = ((`PC_SIZE - 1 > 16)? `PC_SIZE : 17) - $clog2(`CACHE_BLOCK_SIZE / 16);
 localparam COUNTER_SIZE = $clog2(`CACHE_BLOCK_SIZE / `MEM_TRANS_SIZE);
 
 logic [`CACHE_BLOCK_SIZE - 1 : 0] core [2 ** WIDTH];
-logic [15 - $clog2(`CACHE_BLOCK_SIZE) : 0] i_address;
-logic [15 - $clog2(`CACHE_BLOCK_SIZE) : 0] d_address;
+logic [WIDTH - 1 : 0] i_address;
+logic [WIDTH - 1 : 0] d_address;
 
 logic [COUNTER_SIZE - 1 : 0] counter;
 
@@ -52,8 +52,8 @@ always_ff @(posedge clk) begin
 end
 
 always_comb begin
-    i_address = {1'b0, r_i_cache.address};
-    d_address = {1'b1, r_d_cache.address};
+    i_address = {'0, r_i_cache.address};
+    d_address = {'0, r_d_cache.address} | {1'b1, {(WIDTH - 1){1'b0}}};
     case(state)
         READY: begin
             if(r_i_cache.req) begin

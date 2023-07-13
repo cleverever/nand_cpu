@@ -142,6 +142,10 @@ always_comb begin
         READY: begin
             out.hit = valid & in.mem_access & lines[index].valid & (lines[index].tag == tag);
             out.miss = valid & in.mem_access & ~(lines[index].valid & (lines[index].tag == tag));
+            out.data = lines[index].data[(offset * 16) +: 16];
+
+            cache_request.address = {tag, index};
+            
             cache_request.req = REQ_NONE;
             if(out.miss) begin
                 if(lines[index].dirty) begin
