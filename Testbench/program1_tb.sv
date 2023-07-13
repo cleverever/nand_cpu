@@ -32,15 +32,15 @@ task test
     pwr = 1'b0;
     #40ns;
     pwr = 1'b1;
-    DUT.MEMORY.core[DATA_OFFSET][31 : 0] = {op0, op1};
+    DUT.MEMORY.core[DATA_OFFSET][31 : 0] = {op1, op0};
     wait(done);
-    assert ((DUT.MEMORY.core[DATA_OFFSET][47 : 32] == sum) | (DUT.D_CACHE.lines[0].valid == 1'b1 & DUT.D_CACHE.lines[0].tag == 4'b0000 & DUT.D_CACHE.lines[0].data[47 : 32] == sum)) begin
+    assert ((DUT.MEMORY.core[DATA_OFFSET][47 : 32] == sum) | (DUT.D_CACHE.lines[0].valid & DUT.D_CACHE.lines[0].tag == 4'b0000 & DUT.D_CACHE.lines[0].data[47 : 32] == sum)) begin
         $display("TEST PASSED - %d + %d", op0, op1);
     end
     else begin
         $display("TEST FAILED - %d + %d", op0, op1);
         $display("Expected sum: %d", sum);
-        $display("Actual sum:   %d", DUT.MEMORY.core[DATA_OFFSET][47 : 32]);
+        $display("Actual sum:   %d", (DUT.D_CACHE.lines[0].valid & DUT.D_CACHE.lines[0].tag == 4'b0000)? DUT.D_CACHE.lines[0].data[47 : 32] : DUT.MEMORY.core[DATA_OFFSET][47 : 32]);
     end
 endtask
 
