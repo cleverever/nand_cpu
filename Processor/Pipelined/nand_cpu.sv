@@ -148,8 +148,11 @@ decode_glue DECODE_GLUE
     .i_decoder(d_decoder_output),
     .i_regfile(d_regfile_output),
 
+    .a_pass(a_pr_pass),
     .a_forward(a_forward),
+    .w_pass(w_pr_pass),
     .w_forward(w_forward),
+
     .o_pr_pass(d2_pr_pass),
     .o_act_pass(d_act_pass),
     .o_alu_input(d_alu_input),

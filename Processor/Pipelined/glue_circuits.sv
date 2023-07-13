@@ -24,8 +24,11 @@ module decode_glue
     decoder_output_ifc.in i_decoder,
     regfile_output_ifc.in i_regfile,
 
+    pr_pass_ifc.in a_pass,
     forward_data_ifc.in a_forward,
+    pr_pass_ifc.in w_pass,
     forward_data_ifc.in w_forward,
+
     pr_pass_ifc.out o_pr_pass,
     act_pass_ifc.out o_act_pass,
     alu_input_ifc.out o_alu_input,
@@ -39,10 +42,10 @@ logic ps_data;
 
 always_comb begin
     if(i_decoder.use_ra) begin
-        if(a_forward.use_rw & (a_forward.rw_addr == 4'b0000)) begin
+        if(a_pass.valid & a_forward.use_rw & (a_forward.rw_addr == 4'b0000)) begin
             ra_data = a_forward.rw_data;
         end
-        else if(w_forward.use_rw & (w_forward.rw_addr == 4'b0000)) begin
+        else if(w_pass.valid & w_forward.use_rw & (w_forward.rw_addr == 4'b0000)) begin
             ra_data = w_forward.rw_data;
         end
         else begin
@@ -51,10 +54,10 @@ always_comb begin
     end
 
     if(i_decoder.use_rt) begin
-        if(a_forward.use_rw & (a_forward.rw_addr == i_decoder.rt_addr)) begin
+        if(a_pass.valid & a_forward.use_rw & (a_forward.rw_addr == i_decoder.rt_addr)) begin
             rt_data = a_forward.rw_data;
         end
-        else if(w_forward.use_rw & (w_forward.rw_addr == i_decoder.rt_addr)) begin
+        else if(w_pass.valid & w_forward.use_rw & (w_forward.rw_addr == i_decoder.rt_addr)) begin
             rt_data = w_forward.rw_data;
         end
         else begin
@@ -63,10 +66,10 @@ always_comb begin
     end
 
     if(i_decoder.read_ps) begin
-        if(a_forward.write_ps) begin
+        if(a_pass.valid & a_forward.write_ps) begin
             ps_data = a_forward.ps_data;
         end
-        else if(w_forward.write_ps) begin
+        else if(w_pass.valid & w_forward.write_ps) begin
             ps_data = w_forward.ps_data;
         end
         else begin

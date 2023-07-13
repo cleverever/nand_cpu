@@ -18,6 +18,7 @@ modport out
 endinterface
 
 interface forward_data_ifc;
+logic valid;
 logic use_rw;
 logic [3 : 0] rw_addr;
 logic [15 : 0] rw_data;
@@ -26,11 +27,11 @@ logic ps_data;
 
 modport in
 (
-    input use_rw, rw_addr, rw_data, write_ps, ps_data
+    input valid, use_rw, rw_addr, rw_data, write_ps, ps_data
 );
 modport out
 (
-    output use_rw, rw_addr, rw_data, write_ps, ps_data
+    output valid, use_rw, rw_addr, rw_data, write_ps, ps_data
 );
 endinterface
 
