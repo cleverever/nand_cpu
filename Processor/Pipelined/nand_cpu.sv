@@ -76,7 +76,7 @@ i_cache I_CACHE
     .cache_request(f_i_cache_request)
 );
 
-branch_predictor branch_predictor
+branch_predictor BRANCH_PREDICTOR
 (
     .clk,
     .n_rst,
@@ -88,7 +88,7 @@ branch_predictor branch_predictor
     
     .out(f_branch_prediction),
 
-    .feedback_valid(a_pr_pass.valid),
+    .feedback_valid(a_pr_pass.valid & (a_branch_feedback.branch | a_branch_feedback.jump)),
     .i_feedback(a_branch_feedback)
 );
 

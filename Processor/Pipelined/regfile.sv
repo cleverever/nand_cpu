@@ -24,6 +24,8 @@ module regfile
     input logic reg_read_valid,
     decoder_output_ifc.out i_reg_read,
 
+    input logic i_bp_ps,
+
     regfile_output_ifc.out out
 );
 
@@ -38,7 +40,7 @@ always_comb begin
         if(i_reg_read.use_rt) begin
             out.rt = regs[i_reg_read.rt_addr];
         end
-        if(i_reg_read.read_ps) begin
+        if(i_reg_read.read_ps | i_bp_ps) begin
             out.ps = ps_reg;
         end
     end

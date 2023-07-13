@@ -52,6 +52,7 @@ endinterface
 
 interface branch_feedback_ifc;
 logic branch;
+logic jump;
 logic [`PC_SIZE - 1 : 0] pc;
 logic [`PC_SIZE - 1 : 0] predict_target;
 logic [`PC_SIZE - 1 : 0] feedback_target;
@@ -60,11 +61,11 @@ logic feedback_taken;
 
 modport in
 (
-    input branch, pc, predict_target, feedback_target, predict_taken, feedback_taken
+    input branch, jump, pc, predict_target, feedback_target, predict_taken, feedback_taken
 );
 modport out
 (
-    output branch, pc, predict_target, feedback_target, predict_taken, feedback_taken
+    output branch, jump, pc, predict_target, feedback_target, predict_taken, feedback_taken
 );
 endinterface
 

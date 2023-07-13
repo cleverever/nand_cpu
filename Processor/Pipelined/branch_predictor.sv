@@ -26,6 +26,8 @@ module branch_predictor #(parameter TYPE = GSHARE)
     input logic n_rst,
     
     input logic [`PC_SIZE - 1 : 0] pc,
+
+    output logic use_ps,
     input logic ps,
 
     branch_predictor_output_ifc.out out,
@@ -56,11 +58,13 @@ branch_target_buffer BRANCH_TARGET_BUFFER
 );
 
 always_comb begin
+    use_ps = hit;
+
     request.pc = pc;
     request.target = target;
     request.ps = ps;
 
-    out.pc_override = hit & (~branch | taken);
+    out.pc_override = hit & (branch & taken);
     out.target = target;
 end
 
@@ -100,7 +104,7 @@ logic [INDEX_SIZE - 1 : 0] history;
 logic [INDEX_SIZE - 1 : 0] index;
 logic [INDEX_SIZE - 1 : 0] fb_index;
 
-logic [1 : 0] pht [2 ^ INDEX_SIZE];
+logic [1 : 0] pht [2 ** INDEX_SIZE];
 
 always_comb begin
     index = history ^ request.pc[INDEX_SIZE - 1 : 0];
@@ -115,8 +119,8 @@ always_ff @(posedge clk) begin
         pht <= {default:2'b01};
     end
     else begin
-        history <= {history[INDEX_SIZE - 2 : 0], taken};
         if(feedback_valid) begin
+            history <= {history[INDEX_SIZE - 2 : 0], feedback.feedback_taken};
             if(feedback.feedback_taken) begin
                 if(pht[fb_index] < 3) begin
                     pht[fb_index] <= pht[fb_index] + 1;

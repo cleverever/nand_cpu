@@ -97,9 +97,10 @@ always_comb begin
     o_d_cache_input.data = ra_data;
 
     o_branch_feedback.branch = i_decoder.branch;
+    o_branch_feedback.jump = i_decoder.jump;
     o_branch_feedback.pc = i_pr_pass.pc;
     o_branch_feedback.predict_target = i_pr_pass.target;
-    o_branch_feedback.feedback_target = rt_data;
+    o_branch_feedback.feedback_target = i_pr_pass.pc + rt_data;
     o_branch_feedback.predict_taken = i_pr_pass.pc_override;
     o_branch_feedback.feedback_taken = i_decoder.jump | (i_decoder.branch & ps_data);
 end

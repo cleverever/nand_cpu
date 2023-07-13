@@ -105,6 +105,7 @@ always_ff @(posedge clk) begin
             o_d_cache_input.data <= i_d_cache_input.data;
 
             o_branch_feedback.branch <= i_branch_feedback.branch;
+            o_branch_feedback.jump <= i_branch_feedback.jump;
             o_branch_feedback.pc <= i_branch_feedback.pc;
             o_branch_feedback.predict_target <= i_branch_feedback.predict_target;
             o_branch_feedback.feedback_target <= i_branch_feedback.feedback_target;

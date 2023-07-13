@@ -24,7 +24,7 @@ typedef struct packed
 }
 BTB_Entry;
 
-BTB_Entry cache [2 ^ `BTB_PC_BITS];
+BTB_Entry cache [2 ** `BTB_PC_BITS];
 
 logic [`BTB_PC_BITS - 1 : 0] sel;
 logic [(`PC_SIZE - `BTB_PC_BITS) - 1 : 0] sel_tag;
@@ -52,6 +52,7 @@ always_ff @(posedge clk) begin
         if(feedback_valid) begin
             cache[fb_sel].valid <= 1'b1;
             cache[fb_sel].tag <= fb_sel_tag;
+            cache[fb_sel].branch <= i_feedback.branch;
             cache[fb_sel].target <= i_feedback.feedback_target;
         end
     end
