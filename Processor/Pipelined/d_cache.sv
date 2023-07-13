@@ -106,6 +106,10 @@ always_ff @(posedge clk) begin
         state <= next_state;
         case(state)
             READY: begin
+                if(out.hit & in.mem_access == MEM_WRITE) begin
+                    lines[index].data[(offset * 16) +: 16] <= in.data;
+                    lines[index].dirty <= 1'b1;
+                end
             end
             REQUEST_WRITE: begin
                 counter <= 0;
