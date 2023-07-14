@@ -13,7 +13,7 @@ CacheState;
 interface i_cache_request_ifc;
 logic req;
 logic ack;
-logic [15 - $clog2(`CACHE_BLOCK_SIZE) : 0] address;
+logic [`PC_SIZE - $clog2(`CACHE_BLOCK_SIZE / 8) - 1 : 0] address;
 logic [`MEM_TRANS_SIZE - 1 : 0] data;
 
 modport cache
@@ -56,7 +56,7 @@ module i_cache #(parameter INDEX_BITS = 8)
 
 localparam DATA_SIZE = 8;
 localparam OFFSET_BITS = $clog2(`CACHE_BLOCK_SIZE / DATA_SIZE);
-localparam TAG_BITS = 16 - INDEX_BITS - OFFSET_BITS;
+localparam TAG_BITS = `PC_SIZE - INDEX_BITS - OFFSET_BITS;
 localparam COUNTER_SIZE = $clog2(`CACHE_BLOCK_SIZE / `MEM_TRANS_SIZE);
 
 logic [OFFSET_BITS - 1 : 0] offset;
@@ -73,7 +73,7 @@ typedef struct packed
 }
 DCacheLine;
 
-DCacheLine lines [INDEX_BITS - 1 : 0];
+DCacheLine lines [2 ** INDEX_BITS];
 
 CacheState state;
 CacheState next_state;
