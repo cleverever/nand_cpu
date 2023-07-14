@@ -85,6 +85,7 @@ always_comb begin
     o_pr_pass.pc_override = i_pr_pass.pc_override;
     o_pr_pass.target = i_pr_pass.target;
 
+    o_act_pass.jump = i_decoder.jump;
     o_act_pass.mem_access = i_decoder.mem_access;
     o_act_pass.reg_write = i_decoder.use_rw & i_pr_pass.valid;
     o_act_pass.reg_addr = i_decoder.rw_addr;
@@ -103,7 +104,12 @@ always_comb begin
     o_branch_feedback.jump = i_decoder.jump;
     o_branch_feedback.pc = i_pr_pass.pc;
     o_branch_feedback.predict_target = i_pr_pass.target;
-    o_branch_feedback.feedback_target = i_pr_pass.pc + rt_data;
+    if(`PC_SIZE > 16) begin
+        o_branch_feedback.feedback_target = i_decoder.jump? {i_pr_pass.pc[`PC_SIZE - 1 : 16], rt_data} : (i_decoder.branch? (i_pr_pass.pc + rt_data) : i_pr_pass.pc);
+    end
+    else begin
+        o_branch_feedback.feedback_target = i_decoder.jump? rt_data[`PC_SIZE - 1 : 0] : (i_decoder.branch? (i_pr_pass.pc + rt_data) : i_pr_pass.pc);
+    end
     o_branch_feedback.predict_taken = i_pr_pass.pc_override;
     o_branch_feedback.feedback_taken = i_decoder.jump | (i_decoder.branch & ps_data);
 end
@@ -111,6 +117,7 @@ endmodule
 
 module action_glue
 (
+    input logic [`PC_SIZE - 1 : 0] pc,
     act_pass_ifc.in i_act_pass,
     input logic [15 : 0] i_alu_output,
     input logic [15 : 0] i_d_cache_output,
@@ -122,13 +129,13 @@ module action_glue
 always_comb begin
     o_forward.use_rw = i_act_pass.reg_write;
     o_forward.rw_addr = i_act_pass.reg_addr;
-    o_forward.rw_data = i_act_pass.mem_access? i_d_cache_output : i_alu_output;
+    o_forward.rw_data = i_act_pass.jump? (pc[15 : 0] + 1) : (i_act_pass.mem_access? i_d_cache_output : i_alu_output);
     o_forward.write_ps = i_act_pass.ps_write;
     o_forward.ps_data = i_alu_output[0];
 
     o_writeback.reg_write = i_act_pass.reg_write;
     o_writeback.reg_addr = i_act_pass.reg_addr;
-    o_writeback.reg_data = i_act_pass.mem_access? i_d_cache_output : i_alu_output;
+    o_writeback.reg_data = i_act_pass.jump? (pc[15 : 0] + 1) : (i_act_pass.mem_access? i_d_cache_output : i_alu_output);
     o_writeback.ps_write = i_act_pass.ps_write;
     o_writeback.ps_data = i_alu_output[0];
 end

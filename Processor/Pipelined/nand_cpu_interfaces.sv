@@ -40,14 +40,15 @@ logic mem_access;
 logic reg_write;
 logic [3 : 0] reg_addr;
 logic ps_write;
+logic jump;
 
 modport in
 (
-    input mem_access, reg_write, reg_addr, ps_write
+    input mem_access, reg_write, reg_addr, ps_write, jump
 );
 modport out
 (
-    output mem_access, reg_write, reg_addr, ps_write
+    output mem_access, reg_write, reg_addr, ps_write, jump
 );
 endinterface
 

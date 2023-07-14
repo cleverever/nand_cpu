@@ -90,6 +90,7 @@ always_ff @(posedge clk) begin
             o_pr_pass.pc_override <= i_pr_pass.pc_override;
             o_pr_pass.target <= i_pr_pass.target;
 
+            o_act_pass.jump <= i_act_pass.jump;
             o_act_pass.mem_access <= i_act_pass.mem_access;
             o_act_pass.reg_write <= i_act_pass.reg_write;
             o_act_pass.reg_addr <= i_act_pass.reg_addr;

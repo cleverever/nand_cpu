@@ -208,6 +208,7 @@ d_cache D_CACHE
 
 action_glue ACTION_GLUE
 (
+    .pc(a_pr_pass.pc),
     .i_act_pass(a_act_pass),
     .i_alu_output(alu_output),
     .i_d_cache_output(a_d_cache_output.data),
