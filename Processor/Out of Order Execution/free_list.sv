@@ -5,6 +5,8 @@ module free_list
     input logic clk,
     input logic n_rst,
 
+    input logic stall,
+
     input logic reg_return,
     input logic [$clog2(`NUM_REG) - 1 : 0] r_reg,
 
@@ -18,47 +20,47 @@ module free_list
     output logic [$clog2(`NUM_PS) - 1 : 0] c_ps
 );
 
-logic [$clog2(`NUM_REG) - 1 : 0] reg_queue [`NUM_REG];
-logic [$clog2(`NUM_REG) - 1 : 0] reg_head;
-logic [$clog2(`NUM_REG) - 1 : 0] reg_tail;
+logic reg_free [`NUM_REG];
 
-logic [$clog2(`NUM_PS) - 1 : 0] ps_queue [`NUM_PS];
-logic [$clog2(`NUM_PS) - 1 : 0] ps_head;
-logic [$clog2(`NUM_PS) - 1 : 0] ps_tail;
+logic ps_free [`NUM_PS];
 
 always_ff @(posedge clk) begin
     if(~n_rst) begin
         for(int i = 0; i < `NUM_REG; i++) begin
-            reg_queue[i] <= i;
+            reg_free[i] <= 1'b0;
         end
         for(int i = 0; i < `NUM_PS; i++) begin
-            ps_queue[i] <= i;
+            ps_free[i] <= 1'b0;
         end
-        reg_head <= 0;
-        reg_tail <= 0;
-        ps_head <= 0;
-        ps_tail <= 0;
     end
     else begin
-        if(reg_return) begin
-            reg_queue[reg_tail] <= r_reg;
-            reg_tail <= (reg_tail + 1) % `NUM_REG;
-        end
-        if(ps_return) begin
-            ps_queue[ps_tail] <= r_ps;
-            ps_tail <= (ps_tail + 1) % `NUM_PS;
-        end
-        if(reg_checkout) begin
-            reg_head <= (reg_head + 1) % `NUM_REG;
-        end
-        if(ps_checkout) begin
-            ps_head <= (ps_head + 1) % `NUM_PS;
+        if(~stall) begin
+            if(reg_return) begin
+                reg_free[r_reg] <= 1'b1;
+            end
+            if(ps_return) begin
+                ps_free[r_ps] <= 1'b1;
+            end
+            if(reg_checkout) begin
+                reg_free[c_reg] <= 1'b0;
+            end
+            if(ps_checkout) begin
+                ps_free[c_ps] <= 1'b0;
+            end
         end
     end
 end
 
 always_comb begin
-    c_reg = reg_queue[reg_head];
-    c_ps = ps_queue[ps_head];
+    for(int i = `NUM_REG - 1; i >= 0; i--) begin
+        if(reg_free[i]) begin
+            c_reg = i;
+        end
+    end
+    for(int i = `NUM_PS - 1; i >= 0; i--) begin
+        if(ps_free[i]) begin
+            c_ps = i;
+        end
+    end
 end
 endmodule
