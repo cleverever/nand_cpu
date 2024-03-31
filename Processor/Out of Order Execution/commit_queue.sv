@@ -7,24 +7,24 @@ module commit_list
 
     input logic push,
     input logic use_rw,
-    input logic rw_addr,
+    input logic [$clog2(`NUM_REG) - 1 : 0] rw_addr,
     input logic ps_write,
-    input logic ps_addr,
+    input logic [$clog2(`NUM_PS) - 1 : 0] ps_addr,
 
     output logic reg_return,
-    output logic r_reg,
+    output logic [$clog2(`NUM_REG) - 1 : 0] r_reg,
 
     output logic ps_return,
-    output logic r_ps
+    output logic [$clog2(`NUM_PS) - 1 : 0] r_ps
 );
 
 typedef struct packed
 {
     logic complete;
     logic use_rw;
-    logic rw_addr;
+    logic [$clog2(`NUM_REG) - 1 : 0] rw_addr;
     logic ps_write;
-    logic ps_addr;
+    logic [$clog2(`NUM_PS) - 1 : 0] ps_addr;
 } ALEntry;
 
 ALEntry qin;
