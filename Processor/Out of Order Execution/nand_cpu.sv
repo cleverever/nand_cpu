@@ -6,6 +6,18 @@ module nand_cpu
     output logic halt
 );
 
+//F
+
+//D
+decoder_output_ifc decoded();
+reg_alloc_ifc reg_mappings();
+
+//I
+
+//A
+
+//C
+
 
 //====================================================================================================
 //FETCH
@@ -22,14 +34,46 @@ pr_f2d PR_F2D();
 //====================================================================================================
 //DECODE
 //====================================================================================================
-decoder DECODER();
-free_list FREE_LIST();
-reg_alloc_table REG_ALLOC_TABLE();
+decoder DECODER
+(
+    .out(decoded)
+);
+
+free_list FREE_LIST
+(
+    .i_decoded(decoded)
+);
+
+reg_alloc_table REG_ALLOC_TABLE
+(
+    .i_decoded(decoded)
+
+    .out(reg_mappings)
+);
 
 //----------------------------------------------------------------------------------------------------
 //D2I
 //----------------------------------------------------------------------------------------------------
-decode_glue DECODE_GLUE();
+decode_glue DECODE_GLUE
+(
+    .i_decoded(decoded),
+    .i_reg_mappings(reg_mappings)
+);
+
+alu_queue ALU_QUEUE
+(
+
+);
+
+mem_queue MEM_QUEUE
+(
+
+);
+
+ctrl_queue CTRL_QUEUE
+(
+
+);
 
 //====================================================================================================
 //ISSUE
