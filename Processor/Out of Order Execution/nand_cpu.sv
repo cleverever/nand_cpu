@@ -2,7 +2,8 @@
 
 module nand_cpu
 (
-
+    input logic clk,
+    input logic n_rst
 );
 
 logic reg_write;
@@ -25,6 +26,8 @@ free_reg_list FRL
     .out(p_reg)
 );
 
+logic [$clog2(`NUM_REG)-1 : 0] translation [16];
+
 translation_table TT
 (
     .clk,
@@ -32,7 +35,18 @@ translation_table TT
 
     .set(reg_write),
     .v_reg(w_addr),
-    .p_reg(p_reg)
+    .p_reg(p_reg),
+
+    .translation(translation)
+);
+
+decoder DECODER
+(
+    .instr(),
+    .translation(),
+    .p_reg(),
+    
+    .out()
 );
 
 commit_unit CU

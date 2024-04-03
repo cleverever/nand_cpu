@@ -7,10 +7,9 @@ module translation_table
 
     input logic set,
     input logic [3 : 0] v_reg,
-    input logic [$clog2(`NUM_REG)-1 : 0] p_reg
+    input logic [$clog2(`NUM_REG)-1 : 0] p_reg,
+    output logic [$clog2(`NUM_REG)-1 : 0] translation [16]
 );
-
-logic [$clog2(`NUM_REG)-1 : 0] translation [16];
 
 always_ff @(posedge clk) begin
     if(~n_rst) begin
