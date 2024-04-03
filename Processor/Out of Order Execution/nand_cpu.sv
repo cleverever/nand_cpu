@@ -1,112 +1,44 @@
+`include "nand_cpu.svh"
+
 module nand_cpu
 (
-    input logic clk,
-    input logic n_rst,
 
-    output logic halt
 );
 
-//F
+logic reg_write;
+logic [$clog2(`NUM_REG)-1 : 0] w_addr;
 
-//D
-decoder_output_ifc decoded();
-reg_alloc_ifc reg_mappings();
+logic p_reg;
 
-//I
+logic reg_commit;
+logic [$clog2(`NUM_REG)-1 : 0] commit_addr;
 
-//A
-
-//C
-
-
-//====================================================================================================
-//FETCH
-//====================================================================================================
-fetch_unit FETCH_UNIT();
-branch_predictor BRANCH_PREDICTOR();
-
-//----------------------------------------------------------------------------------------------------
-//F2D
-//----------------------------------------------------------------------------------------------------
-fetch_glue FETCH_GLUE();
-pr_f2d PR_F2D();
-
-//====================================================================================================
-//DECODE
-//====================================================================================================
-decoder DECODER
+free_reg_list FRL
 (
-    .out(decoded)
+    .clk,
+    .n_rst,
+
+    .checkin(reg_commit),
+    .in(commit_addr),
+
+    .checkout(reg_write),
+    .out(p_reg)
 );
 
-free_list FREE_LIST
+translation_table TT
 (
-    .i_decoded(decoded)
+    .clk,
+    .n_rst,
+
+    .set(reg_write),
+    .v_reg(w_addr),
+    .p_reg(p_reg)
 );
 
-reg_alloc_table REG_ALLOC_TABLE
+commit_unit CU
 (
-    .i_decoded(decoded)
-
-    .out(reg_mappings)
+    .reg_write(reg_commit),
+    .reg_addr(commit_addr)
 );
-
-//----------------------------------------------------------------------------------------------------
-//D2I
-//----------------------------------------------------------------------------------------------------
-decode_glue DECODE_GLUE
-(
-    .i_decoded(decoded),
-    .i_reg_mappings(reg_mappings)
-);
-
-alu_queue ALU_QUEUE
-(
-
-);
-
-mem_queue MEM_QUEUE
-(
-
-);
-
-ctrl_queue CTRL_QUEUE
-(
-
-);
-
-//====================================================================================================
-//ISSUE
-//====================================================================================================
-regfile REGFILE();
-
-//----------------------------------------------------------------------------------------------------
-//I2A
-//----------------------------------------------------------------------------------------------------
-
-//====================================================================================================
-//ACTION
-//====================================================================================================
-alu ALU();
-d_cache D_CACHE();
-
-//----------------------------------------------------------------------------------------------------
-//A2C
-//----------------------------------------------------------------------------------------------------
-
-//====================================================================================================
-//COMMIT
-//====================================================================================================
-active_list ACTIVE_LIST();
-
-//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-//HAZARD
-//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-hazard_unit HAZARD_UNIT();
-
-//MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-//MEMORY
-//WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
-memory MEMORY();
 
 endmodule
