@@ -20,7 +20,9 @@ translation_table_ifc translation_table();
 
 
 //EXECUTION
-alu_input_ifc alu_input();
+alu_input_ifc r_alu_input();
+
+alu_input_ifc a_alu_input();
 
 //MEMORY
 
@@ -104,20 +106,32 @@ translation_table TT
     .s_translation()
 );
 
+regfile RF
+(
+    .ex_port(ex_rf_port)
+);
+
 execution_buffer EB
 (
     .out(execution_buffer_port)
 );
 
 always_comb begin
-    alu_input.op0 =
-    alu_input.op1 =
-    alu_input.alu_op =
+    r_alu_input.op0 = ex_rf_port.ra;
+    r_alu_input.op1 = execution_buffer_port.use_rt? ex_rf_port.rt : execution_buffer_port.immdt;
+    r_alu_input.alu_op = execution_buffer_port.alu_op;
 end
+
+e_r2a E_R2A
+(
+    .in(r_alu_input),
+    .out(a_alu_input)
+);
 
 alu ALU
 (
-    .in()
+    .in(a_alu_input),
+    .out()
 );
 
 commit_unit CU

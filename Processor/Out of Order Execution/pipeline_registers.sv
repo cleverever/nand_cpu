@@ -1,9 +1,9 @@
 `include "nand_cpu.svh"
 
-module E_R2A
+module e_r2a
 (
     alu_input_ifc.in in,
-    alu_input_ifc.out out,
+    alu_input_ifc.out out
 );
 
 always_ff @(posedge clk) begin

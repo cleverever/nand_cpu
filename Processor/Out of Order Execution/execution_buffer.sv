@@ -5,6 +5,7 @@ logic valid;
 nand_cpu_pkg::AluOp alu_op;
 logic [5:0] immdt;
 logic [$clog2(`NUM_D_REG)-1:0] ra_addr;
+logic use_rt;
 logic [$clog2(`NUM_D_REG)-1:0] rt_addr;
 logic [$clog2(`NUM_D_REG)-1:0] rw_addr;
 logic [15:0] rv_addr;
@@ -39,10 +40,7 @@ typedef struct packed
     logic use_rw;
     logic [$clog2(`NUM_D_REG)-1:0] rw_addr;
     logic [15:0] rv_addr;
-    logic rw_ready;
-    logic use_rs;
     logic [$clog2(`NUM_S_REG)-1:0] rs_addr;
-    logic rs_ready;
     logic ready;
 } eb_entry;
 
@@ -56,8 +54,7 @@ always_comb begin
     ready = 1'b0;
     open = 1'b0;
     for(int i = L-1; i >= 0; i--) begin
-        buffer[i].ready = buffer[i].valid & (~buffer[i].use_ra | buffer[i].ra_ready) & (~buffer[i].use_rt | buffer[i].rt_ready) &
-            (~buffer[i].use_rw | buffer[i].rw_ready) & (~buffer[i].use_rs | buffer[i].rs_ready);
+        buffer[i].ready = buffer[i].valid & (~buffer[i].use_ra | buffer[i].ra_ready) & (~buffer[i].use_rt | buffer[i].rt_ready);
         if(buffer[i].ready) begin
             ready = 1'b1;
             ready_addr = i;
@@ -68,9 +65,10 @@ always_comb begin
         end
     end
     out.valid = ready;
-    out.alu_op = TODO;//TODO
-    out.immdt = TODO;//TODO
+    out.alu_op = buffer[ready_addr].alu_op;
+    out.immdt = buffer[ready_addr].immdt;
     out.ra_addr = buffer[ready_addr].ra_addr;
+    out.use_rt = buffer[ready_addr].use_rt;
     out.rt_addr = buffer[ready_addr].rt_addr;
     out.rw_addr = buffer[ready_addr].rw_addr;
     out.rv_addr = buffer[ready_addr].rv_addr;
