@@ -9,12 +9,12 @@ module nand_cpu
 );
 
 logic reg_write;
-logic [$clog2(`NUM_REG)-1 : 0] w_addr;
+logic [$clog2(`NUM_REG)-1:0] w_addr;
 
 logic p_reg;
 
 logic reg_commit;
-logic [$clog2(`NUM_REG)-1 : 0] commit_addr;
+logic [$clog2(`NUM_REG)-1:0] commit_addr;
 
 translation_table_ifc translation_table();
 
@@ -132,10 +132,17 @@ e_r2a E_R2A
     .out(a_alu_input)
 );
 
+logic [15:0] alu_output;
+
 alu ALU
 (
     .in(a_alu_input),
-    .out()
+    .out(alu_output)
+);
+
+e_a2c E_A2C
+(
+    .alu_result(alu_output)
 );
 
 commit_unit CU
