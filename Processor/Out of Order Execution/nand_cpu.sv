@@ -20,6 +20,7 @@ translation_table_ifc translation_table();
 
 
 //EXECUTION
+regfile_ex_ifc ex_rf_read();
 alu_input_ifc r_alu_input();
 
 alu_input_ifc a_alu_input();
@@ -108,7 +109,7 @@ translation_table TT
 
 regfile RF
 (
-    .ex_port(ex_rf_port)
+    .ex_port(ex_rf_read)
 );
 
 execution_buffer EB
@@ -117,8 +118,11 @@ execution_buffer EB
 );
 
 always_comb begin
-    r_alu_input.op0 = ex_rf_port.ra;
-    r_alu_input.op1 = execution_buffer_port.use_rt? ex_rf_port.rt : execution_buffer_port.immdt;
+    ex_rf_read.ra_addr = execution_buffer_port.ra_addr;
+    ex_rf_read.rt_addr = execution_buffer_port.rt_addr;
+
+    r_alu_input.op0 = ex_rf_read.ra_data;
+    r_alu_input.op1 = execution_buffer_port.use_rt? ex_rf_read.rt_data : execution_buffer_port.immdt;
     r_alu_input.alu_op = execution_buffer_port.alu_op;
 end
 
