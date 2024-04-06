@@ -5,5 +5,5 @@ foreach($file in Get-ChildItem Assembler/*.asm)
 }
 foreach($file in Get-ChildItem Assembler/*.bin)
 {
-    copy -path $file -Destination Testbench
+    copy -path $file -Destination Testbench/programs
 }

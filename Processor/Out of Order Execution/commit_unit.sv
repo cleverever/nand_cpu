@@ -1,3 +1,8 @@
+`include "nand_cpu.svh"
+
+interface commit_unit_ifc
+endinterface
+
 module commit_unit
 (
     output logic reg_write,
