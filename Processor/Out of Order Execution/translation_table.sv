@@ -1,27 +1,21 @@
 `include "nand_cpu.svh"
 
 interface translation_table_ifc;
+logic [$clog2(`NUM_D_REG)-1:0] p_ra_addr;
+logic [3:0] v_ra_addr;
+logic [$clog2(`NUM_D_REG)-1:0] p_rt_addr;
+logic [3:0] v_rt_addr;
+logic [$clog2(`NUM_S_REG)-1:0] p_rs_addr;
 
-logic d_set;
-logic [3 : 0] d_v_reg;
-logic [$clog2(`NUM_D_REG)-1 : 0] d_p_reg;
-logic [$clog2(`NUM_D_REG)-1 : 0] d_translation [16];
-
-logic s_set;
-logic [3 : 0] s_v_reg;
-logic [$clog2(`NUM_S_REG)-1 : 0] s_p_reg;
-logic [$clog2(`NUM_S_REG)-1 : 0] s_translation;
-
-modport self
+modport tt
 (
-    input d_set, d_v_reg, d_p_reg, s_set, s_v_reg, s_p_reg,
-    output d_translation, s_translation
+    input v_ra_addr, v_rt_addr,
+    output p_ra_addr, p_rt_addr, p_rs_addr
 );
-
 modport other
 (
-    input d_translation, s_translation,
-    output d_set, d_v_reg, d_p_reg, s_set, s_v_reg, s_p_reg
+    input p_ra_addr, p_rt_addr, p_rs_addr,
+    output v_ra_addr, v_rt_addr
 );
 endinterface
 
@@ -30,20 +24,33 @@ module translation_table
     input logic clk,
     input logic n_rst,
 
-    translation_table_ifc.self port
+    input logic valid,
+    decoder_ifc.in decoder_in,
+    free_reg_list_ifc.in frl_in,
+
+    translation_table_ifc.tt port
 );
+
+logic [$clog2(`NUM_D_REG)-1:0] d_translation [16];
+logic [$clog2(`NUM_S_REG)-1:0] s_translation;
+
+always_comb begin
+    port.p_ra_addr = d_translation[port.v_ra_addr];
+    port.p_rt_addr = d_translation[port.v_rt_addr];
+    port.p_rs_addr = s_translation;
+end
 
 always_ff @(posedge clk) begin
     if(~n_rst) begin
-        port.d_translation <= '{default:'0};
-        port.s_translation <= '{default:'0};
+        d_translation <= '{default:'0};
+        s_translation <= '{default:'0};
     end
     else begin
-        if(port.d_set) begin
-            port.d_translation[port.d_v_reg] <= port.d_p_reg;
+        if(valid & decoder_in.use_rw) begin
+            d_translation[port.d_v_reg] <= frl_in.rw_addr;
         end
-        if(port.s_set) begin
-            port.s_translation[port.s_v_reg] <= port.s_p_reg;
+        if(valid & decoder_in.use_rs) begin
+            s_translation[port.s_v_reg] <= frl_in.rs_addr;
         end
     end
 end
