@@ -16,59 +16,68 @@ modport ex
 );
 endinterface
 
+interface regfile_d_write_ifc;
+logic valid;
+logic [15:0] data;
+logic [$clog2(`NUM_D_REG)-1:0] addr;
+
+modport rf
+(
+    input valid, data, addr
+);
+modport write
+(
+    output valid, data, addr
+);
+endinterface
+
+interface regfile_s_write_ifc;
+logic valid;
+logic data;
+logic [$clog2(`NUM_S_REG)-1:0] addr;
+
+modport rf
+(
+    input valid, data, addr
+);
+modport write
+(
+    output valid, data, addr
+);
+endinterface
+
 module regfile
 (
     input logic clk,
     input logic n_rst,
 
-    input logic writeback_valid,
-    writeback_ifc.in i_writeback,
+    regfile_ex_ifc.rf ex_read_request,
 
-    regfile_ex_ifc.rf ex_request,
-
-    input logic i_bp_rs,
-
-    regfile_output_ifc.out out
+    regfile_d_write_ifc.rf ex_d_write_request,
+    regfile_s_write_ifc.rf ex_s_write_request
 );
 
 logic [15:0] data_regs [`NUM_D_REG];
 logic status_regs [`NUM_S_REG];
 
 always_comb begin
-    ex_request.ra_data = data_regs[ex_request.ra_addr];
-    ex_request.rt_data = data_regs[ex_request.rt_addr];
-    /*
-    if(reg_read_valid) begin
-        if(i_reg_read.use_ra) begin
-            out.ra = data_regs[i_reg_read.ra_addr];
-        end
-        if(i_reg_read.use_rt) begin
-            out.rt = data_regs[i_reg_read.rt_addr];
-        end
-        if(i_reg_read.read_ps | i_bp_rs) begin
-            out.rs = status_regs[i_reg_read.rs_addr];
-        end
-    end
-    */
+    ex_read_request.ra_data = data_regs[ex_read_request.ra_addr];
+    ex_read_request.rt_data = data_regs[ex_read_request.rt_addr];
 end
 
-//TODO: WRITE PORT
-/*
+
 always_ff @(posedge clk) begin
     if(~n_rst) begin
         data_regs <= '{default:'0};
         status_regs <= '{default:'0};
     end
     else begin
-        if(writeback_valid) begin
-            if(i_writeback.reg_write) begin
-                data_regs[i_writeback.d_reg_addr] <= i_writeback.d_reg_data;
-            end
-            if(i_writeback.ps_write) begin
-                status_regs[i_writeback.s_reg_addr] <= i_writeback.s_reg_data;
-            end
+        if(ex_r_write_request.valid) begin
+            data_regs[ex_r_write_request.addr] <= ex_r_write_request.data;
+        end
+        if(ex_s_write_request.valid) begin
+            status_regs[ex_s_write_request.addr] <= ex_s_write_request.data;
         end
     end
 end
-*/
 endmodule
