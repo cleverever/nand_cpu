@@ -8,24 +8,23 @@ logic [5:0] immdt;
 logic [$clog2(`NUM_D_REG)-1:0] ra_addr;
 logic use_rt;
 logic [$clog2(`NUM_D_REG)-1:0] rt_addr;
-logic use_rw
 logic [$clog2(`NUM_D_REG)-1:0] rw_addr;
 logic [15:0] rv_addr;
 logic [$clog2(`NUM_S_REG)-1:0] rs_addr;
 
-modport self
+modport out
 (
-    output valid, rob_addr, alu_op, immdt, ra_addr, use_rt, rt_addr, use_rw, rw_addr, rv_addr, rs_addr
+    output valid, rob_addr, alu_op, immdt, ra_addr, use_rt, rt_addr, rw_addr, rv_addr, rs_addr
 );
-modport other
+modport in
 (
-    input valid, rob_addr, alu_op, immdt, ra_addr, use_rt, rt_addr, use_rw, rw_addr, rv_addr, rs_addr
+    input valid, rob_addr, alu_op, immdt, ra_addr, use_rt, rt_addr, rw_addr, rv_addr, rs_addr
 );
 endinterface
 
 module execution_buffer #(parameter L = 8)
 (
-    execution_buffer_ifc.self out
+    execution_buffer_ifc.out out
 );
 
 typedef struct packed
@@ -39,7 +38,6 @@ typedef struct packed
     logic use_rt;
     logic [$clog2(`NUM_D_REG)-1:0] rt_addr;
     logic rt_ready;
-    logic use_rw;
     logic [$clog2(`NUM_D_REG)-1:0] rw_addr;
     logic [15:0] rv_addr;
     logic [$clog2(`NUM_S_REG)-1:0] rs_addr;
@@ -72,7 +70,6 @@ always_comb begin
     out.ra_addr = buffer[ready_addr].ra_addr;
     out.use_rt = buffer[ready_addr].use_rt;
     out.rt_addr = buffer[ready_addr].rt_addr;
-    out.use_rw = buffer[ready_addr].use_rw;
     out.rw_addr = buffer[ready_addr].rw_addr;
     out.rv_addr = buffer[ready_addr].rv_addr;
     out.rs_addr = buffer[ready_addr].rs_addr;
