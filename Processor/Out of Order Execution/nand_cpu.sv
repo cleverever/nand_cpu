@@ -21,9 +21,6 @@ translation_table_ifc translation_table();
 
 //EXECUTION
 regfile_ex_ifc ex_rf_read();
-alu_input_ifc r_alu_input();
-
-alu_input_ifc a_alu_input();
 
 //MEMORY
 
@@ -109,7 +106,10 @@ translation_table TT
 
 regfile RF
 (
-    .ex_port(ex_rf_read)
+    .ex_read_request(ex_rf_read),
+
+    .ex_d_write_request(ex_d_write),
+    .ex_s_write_request(ex_s_write)
 );
 
 execution_buffer EB
@@ -117,22 +117,35 @@ execution_buffer EB
     .out(execution_buffer_port)
 );
 
-always_comb begin
-    ex_rf_read.ra_addr = execution_buffer_port.ra_addr;
-    ex_rf_read.rt_addr = execution_buffer_port.rt_addr;
+e_read_glue E_READ_GLUE
+(
+    .eb_in(execution_buffer_port),
 
-    r_alu_input.op0 = ex_rf_read.ra_data;
-    r_alu_input.op1 = execution_buffer_port.use_rt? ex_rf_read.rt_data : execution_buffer_port.immdt;
-    r_alu_input.alu_op = execution_buffer_port.alu_op;
-end
+    .rf_port(ex_rf_read),
+
+    .metadata(e_r_metadata),
+    .rf_dst(e_r_rf_dst),
+    .alu_input(r_alu_input)
+);
+
+metadata_ifc e_r_metadata();
+rf_dst_ifc e_r_rf_dst();
+alu_input_ifc r_alu_input();
 
 e_r2a E_R2A
 (
-    .in(r_alu_input),
-    .out(a_alu_input)
+    .md_in(e_r_metadata),
+    .rf_dst_in(e_r_rf_dst),
+    .alu_input_in(r_alu_input),
+
+    .md_out(e_a_metadata),
+    .rf_dst_out(e_a_rf_dst),
+    .alu_input_out(a_alu_input)
 );
 
-logic [15:0] alu_output;
+metadata_ifc e_a_metadata();
+rf_dst_ifc e_a_rf_dst();
+alu_input_ifc a_alu_input();
 
 alu ALU
 (
@@ -140,12 +153,35 @@ alu ALU
     .out(alu_output)
 );
 
-e_a2c E_A2C
+logic [15:0] alu_output;
+
+e_alu_glue E_ALU_GLUE
 (
-    .alu_result(alu_output)
+    .alu_result(alu_output),
+
+    .ex_d_write(e_a_d_write),
+    .ex_s_write(e_a_s_write)
 );
 
-commit_unit CU
+regfile_d_write_ifc e_a_d_write();
+regfile_s_write_ifc e_a_s_write();
+
+e_a2c E_A2C
+(
+    .md_in(e_a_metadata),
+    .e_a_d_write(e_a_d_write),
+    .e_a_s_write(e_a_s_write),
+
+    .md_out(e_c_metadata),
+    .e_c_d_write(ex_d_write),
+    .e_c_s_write(ex_s_write)
+);
+
+metadata_ifc e_c_metadata();
+regfile_d_write_ifc ex_d_write();
+regfile_s_write_ifc ex_s_write();
+
+reorder_buffer ROB
 (
     .reg_write(reg_commit),
     .reg_addr(commit_addr)
