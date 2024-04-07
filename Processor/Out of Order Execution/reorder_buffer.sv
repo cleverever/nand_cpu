@@ -3,17 +3,17 @@
 interface reorder_buffer_ifc;
 logic valid;
 logic use_rw;
-logic [$clog2(`NUM_D_REG)-1:0] rw_addr;
+logic [$clog2(`NUM_D_REG)-1:0] prev_rw_addr;
 logic use_rs;
-logic [$clog2(`NUM_S_REG)-1:0] rs_addr;
+logic [$clog2(`NUM_S_REG)-1:0] prev_rs_addr;
 
 modport in
 (
-    input valid, use_rw, rw_addr, use_ps, rs_addr
+    input valid, use_rw, prev_rw_addr, use_ps, prev_rs_addr
 );
 modport out
 (
-    output valid, use_rw, rw_addr, use_ps, rs_addr
+    output valid, use_rw, prev_rw_addr, use_ps, prev_rs_addr
 );
 endinterface
 
@@ -26,7 +26,7 @@ module reorder_buffer #(parameter L = 16)
 
     reorder_buffer_ifc.out commit,
 
-    output logic rob_full,
+    output logic stall,
     output logic rob_open_slot
 );
 
@@ -34,9 +34,9 @@ typedef struct packed
 {
     logic done;
     logic use_rw;
-    logic [$clog2(`NUM_D_REG)-1:0] rw_addr;
+    logic [$clog2(`NUM_D_REG)-1:0] prev_rw_addr;
     logic use_rs;
-    logic [$clog2(`NUM_S_REG)-1:0] rs_addr;
+    logic [$clog2(`NUM_S_REG)-1:0] prev_rs_addr;
 } rob_entry;
 
 rob_entry buffer [L];
@@ -46,7 +46,7 @@ logic unsigned [$clog2(L):0] count;
 
 always_comb begin
     commit.valid = buffer[head].done & (count > 0);
-    rob_full = (count == L);
+    stall = (count == L);
     rob_open_slot = tail;
 end
 

@@ -8,22 +8,25 @@ logic [5:0] immdt;
 logic [$clog2(`NUM_D_REG)-1:0] ra_addr;
 logic use_rt;
 logic [$clog2(`NUM_D_REG)-1:0] rt_addr;
+logic write_dst;
 logic [$clog2(`NUM_D_REG)-1:0] rw_addr;
-logic [15:0] rv_addr;
+logic [$clog2(`NUM_D_REG)-1:0] prev_rw_addr;
 logic [$clog2(`NUM_S_REG)-1:0] rs_addr;
+logic [$clog2(`NUM_S_REG)-1:0] prev_rs_addr;
 
-modport out
-(
-    output valid, rob_addr, alu_op, immdt, ra_addr, use_rt, rt_addr, rw_addr, rv_addr, rs_addr
-);
 modport in
 (
-    input valid, rob_addr, alu_op, immdt, ra_addr, use_rt, rt_addr, rw_addr, rv_addr, rs_addr
+    input valid, rob_addr, alu_op, immdt, ra_addr, use_rt, rt_addr, write_dst, rw_addr, prev_rw_addr, rs_addr, prev_rs_addr
+);
+modport out
+(
+    output valid, rob_addr, alu_op, immdt, ra_addr, use_rt, rt_addr, write_dst, rw_addr, prev_rw_addr, rs_addr, prev_rs_addr
 );
 endinterface
 
 module execution_buffer #(parameter L = 8)
 (
+    execution_buffer_ifc.in in,
     execution_buffer_ifc.out out
 );
 
@@ -38,9 +41,11 @@ typedef struct packed
     logic use_rt;
     logic [$clog2(`NUM_D_REG)-1:0] rt_addr;
     logic rt_ready;
+    logic write_dst;
     logic [$clog2(`NUM_D_REG)-1:0] rw_addr;
-    logic [15:0] rv_addr;
+    logic [$clog2(`NUM_D_REG)-1:0] prev_rw_addr;
     logic [$clog2(`NUM_S_REG)-1:0] rs_addr;
+    logic [$clog2(`NUM_S_REG)-1:0] prev_rs_addr;
     logic ready;
 } eb_entry;
 
