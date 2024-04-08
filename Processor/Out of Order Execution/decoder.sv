@@ -29,14 +29,14 @@ logic halt;
 
 nand_cpu_pkg::AluOp alu_op;
 
-modport self
-(
-    output use_ra, use_rt, rt_addr, use_rw, rw_addr, use_rs, use_immdt,
-    immdt, shift, mem_access, mem_op, jump, branch, interrupt, halt, alu_op
-);
-modport other
+modport in
 (
     input use_ra, use_rt, rt_addr, use_rw, rw_addr, use_rs, use_immdt,
+    immdt, shift, mem_access, mem_op, jump, branch, interrupt, halt, alu_op
+);
+modport out
+(
+    output use_ra, use_rt, rt_addr, use_rw, rw_addr, use_rs, use_immdt,
     immdt, shift, mem_access, mem_op, jump, branch, interrupt, halt, alu_op
 );
 endinterface
@@ -45,7 +45,7 @@ module decoder
 (
     input logic [7 : 0] instr,
 
-    decoder_ifc.self port
+    decoder_ifc.out out
 );
 
 always_comb begin
