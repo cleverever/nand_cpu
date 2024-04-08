@@ -76,8 +76,9 @@ always_comb begin
     out.use_rt = buffer[ready_addr].use_rt;
     out.rt_addr = buffer[ready_addr].rt_addr;
     out.rw_addr = buffer[ready_addr].rw_addr;
-    out.rv_addr = buffer[ready_addr].rv_addr;
+    out.prev_rw_addr = buffer[ready_addr].prev_rw_addr;
     out.rs_addr = buffer[ready_addr].rs_addr;
+    out.prev_rs_addr = buffer[ready_addr].prev_rs_addr;
 end
 
 always_ff @(posedge clk) begin
