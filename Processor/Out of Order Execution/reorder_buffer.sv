@@ -27,7 +27,7 @@ module reorder_buffer #(parameter L = 16)
     reorder_buffer_ifc.out commit,
 
     output logic stall,
-    output logic rob_open_slot
+    output logic [$clog2(`ROB_SIZE)-1:0] rob_open_slot
 );
 
 typedef struct packed
