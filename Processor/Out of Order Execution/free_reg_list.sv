@@ -92,11 +92,11 @@ end
 always_ff @(posedge clk) begin
     if(~n_rst) begin
         for(int i = 0; i < `NUM_D_REG; i++) begin
-            r_list <= REG_IDLE;
+            r_list[i] <= REG_IDLE;
         end
 
         for(int i = 0; i < `NUM_S_REG; i++) begin
-            s_list <= REG_IDLE;
+            s_list[i] <= REG_IDLE;
         end
     end
     else begin
@@ -105,7 +105,7 @@ always_ff @(posedge clk) begin
                 r_list[commit.prev_rw_addr] <= REG_IDLE;
             end
             2'b01 : begin
-                r_list[r_out] <= REG_BUSY;
+                r_list[frl_out.rw_addr] <= REG_BUSY;
             end
         endcase
 
@@ -114,7 +114,7 @@ always_ff @(posedge clk) begin
                 s_list[commit.prev_rs_addr] <= REG_IDLE;
             end
             2'b01 : begin
-                s_list[s_out] <= REG_BUSY;
+                s_list[frl_out.rs_addr] <= REG_BUSY;
             end
         endcase
     end

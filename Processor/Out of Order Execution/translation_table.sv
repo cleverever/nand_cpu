@@ -11,7 +11,7 @@ logic [$clog2(`NUM_S_REG)-1:0] p_rs_addr;
 
 modport tt
 (
-    input v_ra_addr, v_rt_addr, v_rw_addr
+    input v_ra_addr, v_rt_addr, v_rw_addr,
     output p_ra_addr, p_rt_addr, p_rw_addr, p_rs_addr
 );
 modport other

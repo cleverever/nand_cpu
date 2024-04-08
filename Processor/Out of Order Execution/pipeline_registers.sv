@@ -14,8 +14,24 @@ modport out
 );
 endinterface
 
+module i2d
+(
+    input logic clk,
+    input logic n_rst,
+
+    output logic valid
+);
+
+always_ff @(posedge clk) begin
+
+end
+endmodule
+
 module e_r2a
 (
+    input logic clk,
+    input logic n_rst,
+
     metadata_ifc.in md_in,
     rf_dst_ifc.in rf_dst_in,
     alu_input_ifc.in alu_input_in,
@@ -37,12 +53,13 @@ always_ff @(posedge clk) begin
     out.op1 <= in.op1;
     out.alu_op <= in.alu_op;
 end
-
-
 endmodule
 
 module e_a2c
 (
+    input logic clk,
+    input logic n_rst,
+    
     metadata_ifc.in md_in,
     regfile_d_write_ifc.rf e_a_d_write,
     regfile_s_write_ifc.rf e_a_s_write,

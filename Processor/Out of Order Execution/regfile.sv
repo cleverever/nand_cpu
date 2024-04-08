@@ -1,3 +1,5 @@
+`include "nand_cpu.svh"
+
 interface regfile_ex_ifc;
 logic [$clog2(`NUM_D_REG)-1:0] ra_addr;
 logic [15:0] ra_data;

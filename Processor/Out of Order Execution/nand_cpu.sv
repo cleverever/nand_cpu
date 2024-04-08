@@ -8,24 +8,9 @@ module nand_cpu
     output logic halt
 );
 
-logic reg_write;
-logic [$clog2(`NUM_REG)-1:0] w_addr;
-
-logic p_reg;
-
-logic reg_commit;
-logic [$clog2(`NUM_REG)-1:0] commit_addr;
-
-translation_table_ifc translation_table();
-
-
-//EXECUTION
-regfile_ex_ifc ex_rf_read();
-
-//MEMORY
-
-//BRANCH
-
+//==================================================
+//FETCH
+//==================================================
 fetch_unit FETCH_UNIT
 (
     .clk,
@@ -67,6 +52,16 @@ branch_predictor BRANCH_PREDICTOR
     .i_feedback(a_branch_feedback)
 );
 
+i2d I2D
+(
+    .valid(d_valid)
+);
+
+logic d_valid;
+
+//==================================================
+//DECODE/RENAME
+//==================================================
 decoder DECODER
 (
     .instr(d_instr),
@@ -79,31 +74,47 @@ free_reg_list FRL
     .clk,
     .n_rst,
 
-    .checkin(reg_commit),
-    .in(commit_addr),
+    .valid(d_valid),
+    .decoder_in(d_decoder_output),
 
-    .checkout(reg_write),
-    .out(p_reg)
+    .commit(commit),
+    .frl_out(frl_out),
+
+    .stall()
 );
 
-logic [$clog2(`NUM_REG)-1 : 0] translation [16];
+free_reg_list_ifc frl_out();
 
 translation_table TT
 (
     .clk,
     .n_rst,
 
-    .d_set(reg_write),
-    .d_v_reg(w_addr),
-    .d_p_reg(p_reg),
-    .d_translation(translation)
+    .valid(d_valid),
+    .decoder_in(d_decoder_output),
+    .frl_in(frl_out),
 
-    .s_set(),
-    .s_v_reg(),
-    .s_p_reg(),
-    .s_translation()
+    .port(tt_port)
 );
 
+translation_table_ifc tt_port();
+
+decode_glue DECODE_GLUE
+(
+    .valid(d_valid),
+    .decoder_in(d_decoder_output),
+    .tt(tt_port),
+    .frl(frl_out),
+    .rob_addr(rob_addr),
+
+    .eb_out(d_eb)
+);
+
+execution_buffer_ifc d_eb();
+
+//==================================================
+//REGFILE
+//==================================================
 regfile RF
 (
     .ex_read_request(ex_rf_read),
@@ -112,14 +123,24 @@ regfile RF
     .ex_s_write_request(ex_s_write)
 );
 
+//==================================================
+//EXECUTION
+//==================================================
 execution_buffer EB
 (
-    .out(execution_buffer_port)
+    .clk,
+    .n_rst,
+    
+    .in(d_eb),
+    .out(r_eb)
 );
+
+execution_buffer_ifc r_eb();
+regfile_ex_ifc ex_rf_read();
 
 e_read_glue E_READ_GLUE
 (
-    .eb_in(execution_buffer_port),
+    .eb_in(r_eb),
 
     .rf_port(ex_rf_read),
 
@@ -181,10 +202,29 @@ metadata_ifc e_c_metadata();
 regfile_d_write_ifc ex_d_write();
 regfile_s_write_ifc ex_s_write();
 
+//==================================================
+//MEMORY
+//==================================================
+
+//==================================================
+//COMMIT
+//==================================================
 reorder_buffer ROB
 (
-    .reg_write(reg_commit),
-    .reg_addr(commit_addr)
+    .clk,
+    .n_rst,
+
+    .push(d_valid),
+    .decoder_in(d_decoder_output),
+    .tt_in(tt_port),
+
+    .commit(commit),
+
+    .stall(),
+    .rob_open_slot(rob_addr)
 );
+
+reorder_buffer_ifc commit();
+logic [$clog2(`ROB_SIZE)-1:0] rob_addr;
 
 endmodule

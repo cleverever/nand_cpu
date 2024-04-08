@@ -1,3 +1,5 @@
+`include "nand_cpu.svh"
+
 module memory_queue #(parameter L)
 (
     input logic clk,
