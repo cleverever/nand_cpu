@@ -72,7 +72,7 @@ always_comb begin
 
     if(checkin_rw) begin
         rw_available = 1'b1;
-        frl_out.rw_addr = commit.rw_addr;
+        frl_out.rw_addr = commit.prev_rw_addr;
     end
     else begin
         rw_available = r_free_valid;
@@ -81,7 +81,7 @@ always_comb begin
 
     if(checkin_rs) begin
         rs_available = 1'b1;
-        frl_out.rs_addr = commit.rs_addr;
+        frl_out.rs_addr = commit.prev_rs_addr;
     end
     else begin
         rs_available = s_free_valid;
@@ -102,7 +102,7 @@ always_ff @(posedge clk) begin
     else begin
         case({checkin_rw, checkout_rw})
             2'b10 : begin
-                r_list[commit.rw_addr] <= REG_IDLE;
+                r_list[commit.prev_rw_addr] <= REG_IDLE;
             end
             2'b01 : begin
                 r_list[r_out] <= REG_BUSY;
@@ -111,7 +111,7 @@ always_ff @(posedge clk) begin
 
         case({checkin_rs, checkout_rs})
             2'b10 : begin
-                s_list[commit.rs_addr] <= REG_IDLE;
+                s_list[commit.prev_rs_addr] <= REG_IDLE;
             end
             2'b01 : begin
                 s_list[s_out] <= REG_BUSY;
