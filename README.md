@@ -1,5 +1,5 @@
 # NAND CPU
-### Current Iteration: Pipelined
+### Current Working Iteration: Pipelined
 
 ## Abstract
 The goal of this project is to create a simplified ISA and processor from scratch. Although simplistic, this processor will incorporate elements and optimizations present in modern processors. This processor is not designed to be efficient, but rather to demonstrate some performance enhancing implementations implemented in modern processors. To simplify the design, the processor will primarily use the NAND instruction for data manipulation, use a very small number of logic registers, and operate on only a small amount of data at a time.
