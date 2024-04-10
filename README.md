@@ -1,4 +1,4 @@
-# nand_cpu
+# NAND CPU
 ### Current Iteration: Pipelined
 
 ## Abstract
