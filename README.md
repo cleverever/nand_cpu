@@ -25,3 +25,6 @@ The goal of this project is to create a simplified ISA and processor from scratc
 | Store | ST | 1101-R4 | MEM[R] = A |
 | Interrupt | INT | 1110-I4 | (Not fully supported) |
 | Halt | HLT | 1111-I4 | Halts machine with immdt4 status code. |
+
+## Single Cycle
+<img src="/Processor/Single Cycle/Single Cycle.png" alt="Single Cycle Diagram">
