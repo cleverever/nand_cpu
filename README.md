@@ -20,7 +20,7 @@ The goal of this project is to create a simplified ISA and processor from scratc
 | Not Equal | NE | 0101-R4 | S = A != R |
 | Branch Register | BR | 0110-R4 | If(S == 1){PC += R} |
 | Jump Register Link | JRL | 0111-R4 | PC = R, R = PC + 1 |
-| Load Immediate | LI | 10-I2-I4 | Loads 4 bits into A shifted by immdt2 x 4. Other bits in A remain unchanged. |
+| Load Immediate | LI | 10-I2-I4 | Loads immdt4 into A shifted by immdt2 x 4. Other bits in A remain unchanged. |
 | Load | LD | 1100-R4 | A = MEM[R] |
 | Store | ST | 1101-R4 | MEM[R] = A |
 | Interrupt | INT | 1110-I4 | (Not fully supported) |
