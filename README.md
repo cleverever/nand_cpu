@@ -28,3 +28,6 @@ The goal of this project is to create a simplified ISA and processor from scratc
 
 ## Single Cycle
 <img src="/Processor/Single Cycle/Single Cycle.png" alt="Single Cycle Diagram">
+
+## Pipelined
+<img src="/Processor/Pipelined/Pipelined.png" alt="Pipelined Diagram">
