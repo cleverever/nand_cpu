@@ -45,6 +45,7 @@ module reorder_buffer #(parameter L = 16)
     input logic push,
     decoder_ifc.in decoder_in,
     translation_table_ifc.in tt_in,
+    free_reg_list_ifc.in frl_in,
 
     input logic rollback,
     input logic unsigned [$clog2(L)-1:0] incident_addr,
@@ -117,8 +118,10 @@ always_ff @(posedge clk) begin
             tail <= (tail + 1) % L;
             buffer[tail].done <= 1'b0;
             buffer[tail].write_rw <= decoder_in.use_rw;
+            buffer[tail].new_rw_addr <= frl_in.rw_addr;
             buffer[tail].prev_rw_addr <= tt_in.p_rw_addr;
             buffer[tail].write_rs <= decoder_in.use_rs;
+            buffer[tail].new_rs_addr <= frl_in.rs_addr;
             buffer[tail].prev_rs_addr <= tt_in.p_rs_addr;
         end
     end
