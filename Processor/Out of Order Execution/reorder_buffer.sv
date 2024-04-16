@@ -24,16 +24,18 @@ modport in
 endinterface
 
 interface reorder_buffer_ifc;
-logic [`NUM_D_REG] return_r_list;
-logic [`NUM_S_REG] return_s_list;
+logic return_r;
+logic [$clog2(`NUM_D_REG)-1:0] r_addr;
+logic return_s;
+logic [$clog2(`NUM_S_REG)-1:0] s_addr;
 
 modport in
 (
-    input return_r_list, return_s_list
+    input return_r, r_addr, return_s, s_addr
 );
 modport out
 (
-    output return_r_list, return_s_list
+    output return_r, r_addr, return_s, s_addr
 );
 endinterface
 
@@ -47,12 +49,11 @@ module reorder_buffer #(parameter L = 16)
     translation_table_ifc.in tt_in,
     free_reg_list_ifc.in frl_in,
 
-    input logic rollback,
-    input logic unsigned [$clog2(L)-1:0] incident_addr,
-
     reorder_buffer_ifc.out checkin,
 
     metadata_ifc.in ex_md,
+
+    rob_checkpoint.in checkpoint,
 
     valid_rob_range_ifc.out active_range,
 
@@ -63,12 +64,10 @@ module reorder_buffer #(parameter L = 16)
 typedef struct packed
 {
     logic done;
-    logic write_rw;
-    logic [$clog2(`NUM_D_REG)-1:0] new_rw_addr; 
-    logic [$clog2(`NUM_D_REG)-1:0] prev_rw_addr;
-    logic write_rs;
-    logic [$clog2(`NUM_S_REG)-1:0] new_rs_addr;
-    logic [$clog2(`NUM_S_REG)-1:0] prev_rs_addr;
+    logic write_r;
+    logic [$clog2(`NUM_D_REG)-1:0] prev_r_addr;
+    logic write_s;
+    logic [$clog2(`NUM_S_REG)-1:0] prev_s_addr;
 } rob_entry;
 
 rob_entry buffer [L];
@@ -92,37 +91,29 @@ always_ff @(posedge clk) begin
         head <= 0;
     end
     else begin
-        checkin.return_r_list <= {default:1'b0};
-        checkin.return_s_list <= {default:1'b0};
         if(buffer[head].done & (count > 0)) begin
             head <= (head + 1) % L;
-            if(buffer[head].write_rw) begin
-                checkin.return_r_list[buffer[head].prev_rw_addr] <= 1'b1;
-            end
-            if(buffer[head].write_rs) begin
-                checkin.return_s_list[buffer[head].prev_rs_addr] <= 1'b1;
-            end
+            commit.return_r <= buffer[head].write_r;
+            commit.r_addr <= buffer[head].prev_r_addr;
+            commit.return_s <= buffer[head].write_s;
+            commit.s_addr <= buffer[head].prev_s_addr;
         end
-        if(rollback) begin
-            tail <= (incident_addr + 1) % L;
-            for(int i = (incident_addr + 1) % L; i != tail; i = (i + 1) % L) begin
-                if(buffer[i].write_rw) begin
-                    checkin.return_r_list[buffer[i].new_rw_addr] <= 1'b1;
-                end
-                if(buffer[i].write_rs) begin
-                    checkin.return_s_list[buffer[i].new_rs_addr] <= 1'b1;
-                end
-            end
+        else begin
+            commit.return_r <= 1'b0;
+            commit.return_s <= 1'b0;
+        end
+        if(checkpoint.restore) begin
+            tail <= checkpoint.tail;
         end
         else if(push) begin
             tail <= (tail + 1) % L;
             buffer[tail].done <= 1'b0;
-            buffer[tail].write_rw <= decoder_in.use_rw;
+            buffer[tail].write_r <= decoder_in.use_rw;
             buffer[tail].new_rw_addr <= frl_in.rw_addr;
-            buffer[tail].prev_rw_addr <= tt_in.p_rw_addr;
-            buffer[tail].write_rs <= decoder_in.use_rs;
+            buffer[tail].prev_r_addr <= tt_in.p_rw_addr;
+            buffer[tail].write_s <= decoder_in.use_rs;
             buffer[tail].new_rs_addr <= frl_in.rs_addr;
-            buffer[tail].prev_rs_addr <= tt_in.p_rs_addr;
+            buffer[tail].prev_s_addr <= tt_in.p_rs_addr;
         end
     end
 

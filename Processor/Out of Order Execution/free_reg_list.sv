@@ -23,16 +23,17 @@ module free_reg_list
     decoder_ifc.in decoder_in,
 
     reorder_buffer_ifc.in commit,
-    free_reg_list_ifc.out frl_out,
+    frl_checkpoint.in checkpoint,
 
-    output logic stall
+    output logic empty
+    free_reg_list_ifc.out frl_out,
 );
 
 logic checkout_rw;
 logic checkout_rs;
 
-logic [`NUM_D_REG] r_free_list;
-logic [`NUM_S_REG] s_free_list;
+logic r_free_list [`NUM_D_REG];
+logic s_free_list [`NUM_S_REG];
 
 logic r_available;
 logic [$clog2(`NUM_D_REG)-1:0] r_addr;
@@ -56,13 +57,12 @@ always_comb begin
             s_addr = i;
         end
     end
-
     checkout_rw = valid & decoder_in.use_rw;
     checkout_rs = valid & decoder_in.use_rs;
-    stall = (checkout_rw & ~r_available) | (checkout_rs & ~s_available);
+    empty = (checkout_rw & ~r_available) | (checkout_rs & ~s_available);
     
-    frl_out.rw_addr = r_addr;
-    frl_out.rs_addr = s_addr;
+    frl_out.rw_addr = commit.return_r? commit.r_addr : r_addr;
+    frl_out.rs_addr = commit.return_s? commit.s_addr : s_addr;
 end
 
 always_ff @(posedge clk) begin
@@ -76,14 +76,28 @@ always_ff @(posedge clk) begin
         end
     end
     else begin
-        r_free_list <= r_free_list & ~commit.return_r_list;
-        if(checkout_rw) begin
-            r_free_list[frl_out.rw_addr] <= 1'b0;
+        if(checkpoint.restore) begin
+            r_free_list <= checkpoint.r_free_list_cp;
+            s_free_list <= checkpoint.s_free_list_cp;
         end
+        else begin
+            case({checkout_rw, commit.return_r})
+                2'b10: begin
+                    r_free_list[r_addr] <= 1'b0;
+                end
+                2'b01: begin
+                    r_free_list[commit.r_addr] <= 1'b1;
+                end
+            endcase
 
-        s_free_list <= s_free_list & ~commit.return_s_list;
-        if(checkout_rs) begin
-            s_free_list[frl_out.rs_addr] <= 1'b0;
+            case({checkout_rs, commit.return_s})
+                2'b10: begin
+                    s_free_list[s_addr] <= 1'b0;
+                end
+                2'b01: begin
+                    s_free_list[commit.s_addr] <= 1'b1;
+                end
+            endcase
         end
     end
 end

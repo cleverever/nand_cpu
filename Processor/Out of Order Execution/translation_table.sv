@@ -30,6 +30,8 @@ module translation_table
     decoder_ifc.in decoder_in,
     free_reg_list_ifc.in frl_in,
 
+    tt_checkpoint.in checkpoint,
+
     translation_table_ifc.tt port
 );
 
@@ -49,11 +51,17 @@ always_ff @(posedge clk) begin
         s_translation <= '{default:'0};
     end
     else begin
-        if(valid & decoder_in.use_rw) begin
-            d_translation[port.d_v_reg] <= frl_in.rw_addr;
+        if(checkpoint.restore) begin
+            d_translation <= checkpoint.d_translation_cp;
+            s_translation <= checkpoint.s_translation_cp;
         end
-        if(valid & decoder_in.use_rs) begin
-            s_translation[port.s_v_reg] <= frl_in.rs_addr;
+            else begin
+            if(valid & decoder_in.use_rw) begin
+                d_translation[port.d_v_reg] <= frl_in.rw_addr;
+            end
+            if(valid & decoder_in.use_rs) begin
+                s_translation[port.s_v_reg] <= frl_in.rs_addr;
+            end
         end
     end
 end
