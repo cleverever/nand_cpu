@@ -16,7 +16,9 @@ LI 0b1110 #1
 LI 0b1101 #0
 CP R6 //R6 is branch address
 
-//Cyclic carry addition
+//CYCLIC_CARRY_ADDITION:
+//R1 contains carry, R2 contains sum. Repeats
+//until there are no more carry propagations.
 CL
 NND R0
 NND R1 //R0 = ~R1
@@ -36,13 +38,13 @@ NND R0 //R0 = R1 XOR R2
 CP R2 //R2 = R1 XOR R2
 CL
 NE R1
-BR R6
+BR R6 //if(R1 != 0){goto CYCLIC_CARRY_ADDITION}
 
 //Storing result
 CL
 NND R0
-NND R2
-NND R0
-ST R7
+NND R2 //R0 = ~(R1 + R2)
+NND R0 //R0 = R1 + R2
+ST R7 //MEM[0x0002] = R1 + R2
 
 HLT #0
