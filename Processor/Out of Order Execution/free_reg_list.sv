@@ -14,6 +14,7 @@ modport out
 );
 endinterface
 
+//Keeps track of registers which are not currently in use and may be assigned to a physical register.
 module free_reg_list
 (
     input logic clk,
@@ -61,8 +62,17 @@ always_comb begin
     checkout_rs = valid & decoder_in.use_rs;
     empty = (checkout_rw & ~r_available) | (checkout_rs & ~s_available);
     
-    frl_out.rw_addr = commit.return_r? commit.r_addr : r_addr;
-    frl_out.rs_addr = commit.return_s? commit.s_addr : s_addr;
+    //On a commit, the returned register will be used immediately.
+    frl_out.rw_addr = r_addr;
+    frl_out.rs_addr = s_addr;
+    if(commit.return_r) begin
+        r_available = 1'b1;
+        frl_out.rw_addr = commit.r_addr;
+    end
+    if(commit.return_s) begin
+        s_available = 1'b1;
+        frl_out.rs_addr = commit.s_addr;
+    end
 end
 
 always_ff @(posedge clk) begin
@@ -76,10 +86,15 @@ always_ff @(posedge clk) begin
         end
     end
     else begin
+
+        //On incorrect execution, the free list will need to be restored to the checkpoint state
+        //to prevent from deadlocking registers used by cancelled instructions.
         if(checkpoint.restore) begin
             r_free_list <= checkpoint.r_free_list;
             s_free_list <= checkpoint.s_free_list;
         end
+
+        //Handles the internal state
         else begin
             case({checkout_rw, commit.return_r})
                 2'b10: begin
