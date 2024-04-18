@@ -6,6 +6,6 @@
 `define CACHE_BLOCK_SIZE 256
 `define MEM_TRANS_SIZE 64
 
-`define ROB_SIZE 64
+`define ROB_LENGTH 64
 
 import nand_cpu_pkg::*;
