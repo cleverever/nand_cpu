@@ -77,8 +77,8 @@ always_ff @(posedge clk) begin
     end
     else begin
         if(checkpoint.restore) begin
-            r_free_list <= checkpoint.r_free_list_cp;
-            s_free_list <= checkpoint.s_free_list_cp;
+            r_free_list <= checkpoint.r_free_list;
+            s_free_list <= checkpoint.s_free_list;
         end
         else begin
             case({checkout_rw, commit.return_r})
