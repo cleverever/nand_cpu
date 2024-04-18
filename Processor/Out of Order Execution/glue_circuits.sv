@@ -3,12 +3,21 @@
 module decode_glue
 (
     input logic valid,
+    input logic pc,
+    input logic branch_taken,
     decoder_ifc.in decoder_in,
     translation_table_ifc.other tt,
     free_reg_list_ifc.other frl,
     input logic [$clog2(`ROB_SIZE)-1:0] rob_addr,
 
-    execution_buffer_ifc.out eb_out
+    input logic flush,
+
+    decode_hazard.out hazard,
+
+    branch_valid_ifc.out bv,
+
+    execution_buffer_ifc.out eb_out,
+    branch_buffer_ifc.out bb_out
 );
 
 always_comb begin
@@ -16,7 +25,14 @@ always_comb begin
     tt.v_rt_addr = decoder_in.rt_addr;
     tt.v_rw_addr = decoder_in.rw_addr;
 
-    eb_out.valid = valid;
+    hazard.mispredict = ~flush & branch_taken & (decoder_in.pipeline != BR);
+    hazard.recovery_pc = pc + 1;
+
+    bv.valid = valid;
+    bv.pc = pc;
+    bv.branch = decoder_in.branch | decoder_in.jump;
+
+    eb_out.valid = valid & ~flush;
     eb_out.rob_addr = rob_addr;
     eb_out.alu_op = decoder_in.alu_op;
     eb_out.immdt = decoder_in.immdt;
@@ -28,6 +44,45 @@ always_comb begin
     eb_out.prev_rw_addr = tt.p_rw_addr;
     eb_out.rs_addr = frl.rs_addr;
     eb_out.prev_rs_addr = tt.p_rs_addr;
+end
+endmodule
+
+module b_read_glue
+(
+    branch_buffer_ifc.in bb_in,
+
+    metadata_ifc.out metadata,
+    rf_dst_ifc.out rf_dst,
+
+    regfile_br_ifc.br rf_port,
+    branch_outcome_ifc.out branch_outcome
+
+    branch_hazard.out hazard,
+    branch_recovery.out recovery
+);
+
+always_comb begin
+    rf_port.rt_addr = bb_in.rt_addr;
+    rf_port.rs_addr = bb_in.rs_addr;
+
+    branch_outcome.valid = bb_in.valid;
+    branch_outcome.pc = bb_in.pc;
+    branch_outcome.taken = rf_port.rs_data;
+    if(`PC_SIZE > 16) begin
+        branch_outcome.target = bb_in.jump? {bb_in.pc[`PC_SIZE-1:16], rf_port.rt_data} : (bb_in.pc + rf_port.rt_data);
+    end
+    else begin
+        branch_outcome.target = bb_in.jump? rf_port.rt_data[`PC_SIZE-1:0] : (bb_in.pc + rf_port.rt_data);
+    end
+
+    hazard.mispredict = (bb_in.predict_taken != rf_port.rs_data) | (bb_in.predict_target != branch_outcome.target);
+    hazard.recovery_pc = rf_port.rs_data? branch_outcome.target : (bb_in.pc + 1);
+
+    recovery.frl_r_free_list_cp = bb_in.r_free_list_cp;
+    recovery.frl_s_free_list_cp = bb_in.s_free_list_cp;
+    recovery.tt_d_translation_cp = bb_in.d_translation_cp;
+    recovery.tt_s_translation_cp = bb_in.s_translation_cp;
+    recovery.rob_tail_cp = (metadata.rob_addr + (`ROB_LENGTH - 1)) % `ROB_LENGTH;
 end
 endmodule
 
