@@ -19,11 +19,27 @@ module i2d
     input logic clk,
     input logic n_rst,
 
-    output logic valid
+    input logic i2d_flush,
+    input logic i2d_stall,
+
+    input logic branch_taken_in,
+    input logic pc_in,
+
+    output logic valid_out,
+    output logic pc_out,
+    output logic branch_taken_out
 );
 
 always_ff @(posedge clk) begin
-
+    if(~n_rst) begin
+        //TODO RESET
+    end
+    else begin
+        valid_out = ~(i2d_flush | i2d_stall);
+        if(~i2d_stall) begin
+            //TODO in = out;
+        end
+    end
 end
 endmodule
 
@@ -36,13 +52,15 @@ module e_r2a
     rf_dst_ifc.in rf_dst_in,
     alu_input_ifc.in alu_input_in,
 
+    valid_rob_range_ifc.in rob_valid_range,
+
     metadata_ifc.out md_out,
     rf_dst_ifc.out rf_dst_out,
     alu_input_ifc.out alu_input_out
 );
 
 always_ff @(posedge clk) begin
-    md_out.valid <= md_in.valid;
+    md_out.valid <= md_in.valid & rob_valid_range.check_valid(md_in.rob_addr);
     md_out.rob_addr <= md_in.rob_addr;
 
     rf_dst_out.write_dst <= rf_dst_in.write_dst;
