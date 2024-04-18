@@ -8,6 +8,50 @@ module nand_cpu
     output logic halt
 );
 
+//FETCH
+logic [`PC_SIZE-1:0] pc;
+
+//DECODE/RENAME
+free_reg_list_ifc frl_out();
+translation_table_ifc tt_port();
+execution_buffer_ifc d_eb();
+logic d_valid;
+
+//BRANCH
+
+//EXECUTE
+//read
+execution_buffer_ifc r_eb();
+regfile_ex_ifc ex_rf_read();
+metadata_ifc e_r_metadata();
+rf_dst_ifc e_r_rf_dst();
+alu_input_ifc r_alu_input();
+metadata_ifc e_a_metadata();
+rf_dst_ifc e_a_rf_dst();
+//alu
+logic [15:0] alu_output;
+alu_input_ifc a_alu_input();
+regfile_d_write_ifc e_a_d_write();
+regfile_s_write_ifc e_a_s_write();
+//write
+metadata_ifc e_c_metadata();
+regfile_d_write_ifc ex_d_write();
+regfile_s_write_ifc ex_s_write();
+
+//MEMORY
+
+//COMMIT
+reorder_buffer_ifc commit();
+logic [$clog2(`ROB_SIZE)-1:0] rob_addr;
+
+//HAZARD
+
+//==================================================
+//BRANCH
+//==================================================
+
+
+
 //==================================================
 //FETCH
 //==================================================
@@ -43,25 +87,26 @@ branch_predictor BRANCH_PREDICTOR
     
     .pc(pc),
 
-    .use_ps(predictor_use_ps),
-    .ps(d_regfile_output.ps),
-    
-    .out(f_branch_prediction),
+    .out(),
 
-    .feedback_valid(a_pr_pass.valid & (a_branch_feedback.branch | a_branch_feedback.jump)),
-    .i_feedback(a_branch_feedback)
+    .branch_valid_in(),
+    .branch_outcome_in()
 );
 
 i2d I2D
 (
+    .pc(),
+    .branch(d_branch_taken),
     .valid(d_valid)
 );
 
-logic d_valid;
+logic d_branch_taken;
 
-//==================================================
-//DECODE/RENAME
-//==================================================
+//====================================================================================================
+// DECODE/RENAME
+//====================================================================================================
+// Decodes instructions and maps logical registers to physical registers. Will stall if reorder buffer
+// or functional unit buffers are full.
 decoder DECODER
 (
     .instr(d_instr),
@@ -83,8 +128,6 @@ free_reg_list FRL
     .stall()
 );
 
-free_reg_list_ifc frl_out();
-
 translation_table TT
 (
     .clk,
@@ -97,46 +140,85 @@ translation_table TT
     .port(tt_port)
 );
 
-translation_table_ifc tt_port();
-
 decode_glue DECODE_GLUE
 (
     .valid(d_valid),
+    .pc(),
+    .branch_taken(),
     .decoder_in(d_decoder_output),
     .tt(tt_port),
     .frl(frl_out),
     .rob_addr(rob_addr),
 
-    .eb_out(d_eb)
+    .flush(),
+
+    .hazard(),
+
+    .bv(),
+
+    .eb_out(d_eb),
+    .bb_out()
 );
 
-execution_buffer_ifc d_eb();
-
-//==================================================
-//REGFILE
-//==================================================
+//====================================================================================================
+// REGFILE
+//====================================================================================================
 regfile RF
 (
-    .ex_read_request(ex_rf_read),
+    .ex_read_request(ex_f_rf_read),
 
     .ex_d_write_request(ex_d_write),
     .ex_s_write_request(ex_s_write)
 );
 
-//==================================================
-//EXECUTION
-//==================================================
+forward_unit FU
+(
+    .clk,
+    .n_rst,
+
+    .reg_req_in(ex_rf_read),
+    .reg_req_out(ex_f_rf_read),
+
+    .e_a_dfw(),
+    .e_a_sfw(),
+
+    .e_c_dfw(),
+    .e_c_sfw(),
+
+    .rob_in(),
+
+    .r_calculated_list(),
+    .s_calculated_list()
+);
+
+//====================================================================================================
+// BRANCH
+//====================================================================================================
+// Verifies branch predictions and sends hazard signals on incorrect predictions. Will never stall.
+branch_buffer BB
+(
+
+);
+
+branch_glue B_READ_GLUE
+(
+
+);
+
+//====================================================================================================
+// EXECUTION
+//====================================================================================================
+// Handles register manipulation operations. Will never stall.
 execution_buffer EB
 (
     .clk,
     .n_rst,
-    
+
+    .r_calculated_list(),
+
     .in(d_eb),
     .out(r_eb)
 );
-
-execution_buffer_ifc r_eb();
-regfile_ex_ifc ex_rf_read();
 
 e_read_glue E_READ_GLUE
 (
@@ -149,10 +231,6 @@ e_read_glue E_READ_GLUE
     .alu_input(r_alu_input)
 );
 
-metadata_ifc e_r_metadata();
-rf_dst_ifc e_r_rf_dst();
-alu_input_ifc r_alu_input();
-
 e_r2a E_R2A
 (
     .md_in(e_r_metadata),
@@ -164,17 +242,11 @@ e_r2a E_R2A
     .alu_input_out(a_alu_input)
 );
 
-metadata_ifc e_a_metadata();
-rf_dst_ifc e_a_rf_dst();
-alu_input_ifc a_alu_input();
-
 alu ALU
 (
     .in(a_alu_input),
     .out(alu_output)
 );
-
-logic [15:0] alu_output;
 
 e_alu_glue E_ALU_GLUE
 (
@@ -183,9 +255,6 @@ e_alu_glue E_ALU_GLUE
     .ex_d_write(e_a_d_write),
     .ex_s_write(e_a_s_write)
 );
-
-regfile_d_write_ifc e_a_d_write();
-regfile_s_write_ifc e_a_s_write();
 
 e_a2c E_A2C
 (
@@ -198,17 +267,14 @@ e_a2c E_A2C
     .e_c_s_write(ex_s_write)
 );
 
-metadata_ifc e_c_metadata();
-regfile_d_write_ifc ex_d_write();
-regfile_s_write_ifc ex_s_write();
+//====================================================================================================
+// MEMORY
+//====================================================================================================
 
-//==================================================
-//MEMORY
-//==================================================
-
-//==================================================
-//COMMIT
-//==================================================
+//====================================================================================================
+// COMMIT
+//====================================================================================================
+// Finalizes changes to the system by releasing inaccessible registers
 reorder_buffer ROB
 (
     .clk,
@@ -220,11 +286,17 @@ reorder_buffer ROB
 
     .commit(commit),
 
+    .ex_md(e_c_metadata),
+
     .stall(),
     .rob_open_slot(rob_addr)
 );
 
-reorder_buffer_ifc commit();
-logic [$clog2(`ROB_SIZE)-1:0] rob_addr;
-
+//====================================================================================================
+// HAZARD
+//====================================================================================================
+hazard_controller HC
+(
+    
+);
 endmodule
