@@ -12,7 +12,7 @@ The goal of this project is to create a simplified ISA and processor from scratc
 | Name | Assembly | Machine Code | Description |
 | -------- | -------- | -------- | -------- |
 | Clear | CL | 00000000 | **R<sub>A</sub>** = 0 |
-| Copy | CP | 0000-R4 | **R<sub>N</sub>** = **R<sub>A</sub>** (Excludes N = 0)|
+| Copy | CP | 0000-R4 | **R<sub>N</sub>** = **R<sub>A</sub>** -- (Excludes N = 0 as copying to self is not useful)|
 | Nand | NND | 0001-R4 | **R<sub>A</sub>** = NAND(**R<sub>A</sub>**, **R<sub>N</sub>**) |
 | Left Shift | LS | 0010-R4 | **R<sub>A</sub>** = **R<sub>A</sub>** << **R<sub>N</sub>** |
 | Right Shift | RS | 0011-R4 | **R<sub>A</sub>** = **R<sub>A</sub>** >> **R<sub>N</sub>** |
