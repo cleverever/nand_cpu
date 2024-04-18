@@ -27,6 +27,8 @@ module execution_buffer #(parameter L = 8)
     input logic clk,
     input logic n_rst,
 
+    input logic r_calculated_list [`NUM_D_REG],
+
     execution_buffer_ifc.in in,
     execution_buffer_ifc.out out
 );
@@ -58,6 +60,8 @@ always_comb begin
     ready = 1'b0;
     open = 1'b0;
     for(int i = L-1; i >= 0; i--) begin
+        buffer[i].ra_ready = r_calculated_list[buffer[i].ra_addr];
+        buffer[i].rt_ready = r_calculated_list[buffer[i].rt_addr];
         buffer[i].ready = buffer[i].valid & (~buffer[i].use_ra | buffer[i].ra_ready) & (~buffer[i].use_rt | buffer[i].rt_ready);
         if(buffer[i].ready) begin
             ready = 1'b1;
