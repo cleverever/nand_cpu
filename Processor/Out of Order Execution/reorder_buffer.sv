@@ -1,11 +1,11 @@
 `include "nand_cpu.svh"
 
 interface valid_rob_range_ifc;
-logic unsigned [$clog2(L)-1:0] high;
-logic unsigned [$clog2(L)-1:0] low;
+logic unsigned [$clog2(`ROB_LENGTH)-1:0] high;
+logic unsigned [$clog2(`ROB_LENGTH)-1:0] low;
 logic unsigned rob_empty;
 
-function automatic logic check_valid(logic unsigned [$clog2(L)-1:0] rob_addr);
+function automatic logic check_valid(logic unsigned [$clog2(`ROB_LENGTH)-1:0] rob_addr);
     if(high > low) begin
         return (rob_addr < high) & (rob_addr >= low);
     end
@@ -19,7 +19,7 @@ endfunction
 
 modport in
 (
-    input high, low
+    input high, low, rob_empty
 );
 endinterface
 
@@ -39,7 +39,7 @@ modport out
 );
 endinterface
 
-module reorder_buffer #(parameter L = 16)
+module reorder_buffer
 (
     input logic clk,
     input logic n_rst,
@@ -49,9 +49,11 @@ module reorder_buffer #(parameter L = 16)
     translation_table_ifc.in tt_in,
     free_reg_list_ifc.in frl_in,
 
-    reorder_buffer_ifc.out checkin,
-
     metadata_ifc.in ex_md,
+    metadata_ifc.in br_md,
+    metadata_ifc.in mem_md,
+
+    reorder_buffer_ifc.out checkin,
 
     rob_checkpoint.in checkpoint,
 
@@ -70,10 +72,10 @@ typedef struct packed
     logic [$clog2(`NUM_S_REG)-1:0] prev_s_addr;
 } rob_entry;
 
-rob_entry buffer [L];
-logic unsigned [$clog2(L)-1:0] tail;
-logic unsigned [$clog2(L)-1:0] head;
-logic unsigned [$clog2(L):0] count;
+rob_entry buffer [`ROB_LENGTH];
+logic unsigned [$clog2(`ROB_LENGTH)-1:0] tail;
+logic unsigned [$clog2(`ROB_LENGTH)-1:0] head;
+logic unsigned [$clog2(`ROB_LENGTH+1)-1:0] count;
 
 always_comb begin
     active_range.high = tail;
@@ -81,7 +83,7 @@ always_comb begin
 
     count = tail - head;
 
-    rob_full = (count == L - 1);
+    rob_full = (count == `ROB_LENGTH - 1);
     rob_open_slot = tail;
 end
 
@@ -92,7 +94,7 @@ always_ff @(posedge clk) begin
     end
     else begin
         if(buffer[head].done & (count > 0)) begin
-            head <= (head + 1) % L;
+            head <= (head + 1) % `ROB_LENGTH;
             commit.return_r <= buffer[head].write_r;
             commit.r_addr <= buffer[head].prev_r_addr;
             commit.return_s <= buffer[head].write_s;
@@ -106,7 +108,7 @@ always_ff @(posedge clk) begin
             tail <= checkpoint.tail;
         end
         else if(push) begin
-            tail <= (tail + 1) % L;
+            tail <= (tail + 1) % `ROB_LENGTH;
             buffer[tail].done <= 1'b0;
             buffer[tail].write_r <= decoder_in.use_rw;
             buffer[tail].new_rw_addr <= frl_in.rw_addr;
@@ -119,6 +121,12 @@ always_ff @(posedge clk) begin
 
     if(ex_md.valid) begin
         buffer[ex_md.rob_addr].done <= 1'b1;
+    end
+    if(br_md.valid) begin
+        buffer[br_md.rob_addr].done <= 1'b1;
+    end
+    if(mem_md.valid) begin
+        buffer[mem_md.rob_addr].done <= 1'b1;
     end
 end
 endmodule

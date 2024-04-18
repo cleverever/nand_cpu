@@ -18,6 +18,24 @@ modport ex
 );
 endinterface
 
+interface regfile_br_ifc;
+logic [$clog2(`NUM_D_REG)-1:0] rt_addr;
+logic [15:0] rt_data;
+logic [$clog2(`NUM_S_REG)-1:0] rs_addr;
+logic rs_data;
+
+modport rf
+(
+    input rt_addr, rs_addr,
+    output rt_data, rs_data
+);
+modport br
+(
+    input rt_data, rs_data,
+    output rt_addr, rs_addr
+);
+endinterface
+
 interface regfile_d_write_ifc;
 logic valid;
 logic [15:0] data;
@@ -54,9 +72,11 @@ module regfile
     input logic n_rst,
 
     regfile_ex_ifc.rf ex_read_request,
+    regfile_br_ifc.rf br_read_request,
 
     regfile_d_write_ifc.rf ex_d_write_request,
-    regfile_s_write_ifc.rf ex_s_write_request
+    regfile_s_write_ifc.rf ex_s_write_request,
+    regfile_d_write_ifc.rf br_d_write_request
 );
 
 logic [15:0] data_regs [`NUM_D_REG];
@@ -65,6 +85,8 @@ logic status_regs [`NUM_S_REG];
 always_comb begin
     ex_read_request.ra_data = data_regs[ex_read_request.ra_addr];
     ex_read_request.rt_data = data_regs[ex_read_request.rt_addr];
+    br_read_request.rt_data = data_regs[br_read_request.rt_addr];
+    br_read_request.rs_data = status_regs[br_read_request.rs_addr];
 end
 
 

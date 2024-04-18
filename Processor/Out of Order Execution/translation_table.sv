@@ -52,8 +52,8 @@ always_ff @(posedge clk) begin
     end
     else begin
         if(checkpoint.restore) begin
-            d_translation <= checkpoint.d_translation_cp;
-            s_translation <= checkpoint.s_translation_cp;
+            d_translation <= checkpoint.d_translation;
+            s_translation <= checkpoint.s_translation;
         end
             else begin
             if(valid & decoder_in.use_rw) begin
