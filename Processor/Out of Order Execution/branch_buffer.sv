@@ -11,6 +11,11 @@ logic [$clog2(`NUM_D_REG)-1:0] rt_addr;
 logic [$clog2(`NUM_D_REG)-1:0] rw_addr;
 logic [$clog2(`NUM_S_REG)-1:0] rs_addr;
 
+logic r_free_list_cp [`NUM_D_REG];
+logic s_free_list_cp [`NUM_S_REG];
+logic [$clog2(`NUM_D_REG)-1:0] d_translation_cp [16];
+logic [$clog2(`NUM_S_REG)-1:0] s_translation_cp;
+
 modport in
 (
     input valid, rob_addr, jump, predict_taken, pc, predict_target, rt_addr, rw_addr, rs_addr
@@ -25,6 +30,9 @@ module branch_buffer #(parameter L = 8)
 (
     input logic clk,
     input logic n_rst,
+
+    input logic r_calculated_list [`NUM_D_REG],
+    input logic s_calculated_list [`NUM_S_REG],
 
     branch_buffer_ifc.in in,
     branch_buffer_ifc.out out
@@ -56,7 +64,9 @@ always_comb begin
     ready = 1'b0;
     open = 1'b0;
     for(int i = L-1; i >= 0; i--) begin
-        buffer[i].ready = buffer[i].valid & rt_ready & (jump | rs_ready);
+        buffer[i].rt_ready = r_calculated_list[buffer[i].rt_addr];
+        buffer[i].rs_ready = s_calculated_list[buffer[i].rs_addr];
+        buffer[i].ready = buffer[i].valid & buffer[i].rt_ready & (buffer[i].jump | buffer[i].rs_ready);
         if(buffer[i].ready) begin
             ready = 1'b1;
             ready_addr = i;
