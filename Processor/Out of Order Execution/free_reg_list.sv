@@ -94,7 +94,7 @@ always_ff @(posedge clk) begin
             s_free_list <= checkpoint.s_free_list;
         end
 
-        //Handles the internal state
+        //Handles the internal state changes causes by commits and checkouts.
         else begin
             case({checkout_rw, commit.return_r})
                 2'b10: begin

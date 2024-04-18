@@ -21,6 +21,8 @@ modport other
 );
 endinterface
 
+//Keeps track of the canonical state of the machine. Determines which physical register a logical
+//register maps to, clarifying false dependencies. 
 module translation_table
 (
     input logic clk,
@@ -51,11 +53,17 @@ always_ff @(posedge clk) begin
         s_translation <= '{default:'0};
     end
     else begin
+
+        //On incorrect execution, the translation table will need to be restored to the checkpoint state
+        //to restore proper register mappings before the incident.
         if(checkpoint.restore) begin
             d_translation <= checkpoint.d_translation;
             s_translation <= checkpoint.s_translation;
         end
-            else begin
+
+        //Upon a write to a register, the mapping needs to be updated as any new instructions
+        //must reference the value in the new register.
+        else begin
             if(valid & decoder_in.use_rw) begin
                 d_translation[port.d_v_reg] <= frl_in.rw_addr;
             end
