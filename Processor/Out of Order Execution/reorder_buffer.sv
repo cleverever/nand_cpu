@@ -39,6 +39,8 @@ modport out
 );
 endinterface
 
+//Keeps track of instruction order and keeps physical registers reserved
+//until their value is no longer needed.
 module reorder_buffer
 (
     input logic clk,
@@ -70,7 +72,8 @@ typedef struct packed
     logic [$clog2(`NUM_D_REG)-1:0] prev_r_addr;
     logic write_s;
     logic [$clog2(`NUM_S_REG)-1:0] prev_s_addr;
-} rob_entry;
+}
+rob_entry;
 
 rob_entry buffer [`ROB_LENGTH];
 logic unsigned [$clog2(`ROB_LENGTH)-1:0] tail;
@@ -93,6 +96,11 @@ always_ff @(posedge clk) begin
         head <= 0;
     end
     else begin
+
+        //Commits an instruction at the front of the queue if it is done. Will return
+        //the previously used physical register if its logical register was overwritten.
+        //Since instructions commit in order, we can be sure that it is safe to return the
+        //physical register as any branch mispredictions would have already been handled.
         if(buffer[head].done & (count > 0)) begin
             head <= (head + 1) % `ROB_LENGTH;
             commit.return_r <= buffer[head].write_r;
@@ -104,9 +112,14 @@ always_ff @(posedge clk) begin
             commit.return_r <= 1'b0;
             commit.return_s <= 1'b0;
         end
+
+        //Delete new instructions after incorrect execution to prevent physical registers
+        //containing data still in use to be overwritten.
         if(checkpoint.restore) begin
             tail <= checkpoint.tail;
         end
+
+        //Adds a new instruction to the queue after it is decoded.
         else if(push) begin
             tail <= (tail + 1) % `ROB_LENGTH;
             buffer[tail].done <= 1'b0;

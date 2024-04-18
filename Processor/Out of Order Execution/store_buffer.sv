@@ -9,6 +9,7 @@ module store_buffer
 
     input logic pop,
 
+    output logic empty,
     output logic ready,
     output logic rob_addr
 );
