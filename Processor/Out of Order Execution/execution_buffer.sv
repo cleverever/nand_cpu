@@ -2,7 +2,7 @@
 
 interface execution_buffer_ifc;
 logic valid;
-logic rob_addr;
+logic [$clog2(`ROB_SIZE)-1:0] rob_addr;
 nand_cpu_pkg::AluOp alu_op;
 logic [5:0] immdt;
 logic [$clog2(`NUM_D_REG)-1:0] ra_addr;
@@ -27,8 +27,13 @@ module execution_buffer #(parameter L = 8)
     input logic clk,
     input logic n_rst,
 
-    input logic r_calculated_list [`NUM_D_REG],
+    buffer_ctrl_ifc.in ctrl,
+    rob_checkpoint.in rob_cp,
+    input logic [$clog2(`ROB_SIZE)-1:0] rob_head,
+    output logic full,
 
+    input logic r_calculated_list [`NUM_D_REG],
+    
     execution_buffer_ifc.in in,
     execution_buffer_ifc.out out
 );
@@ -36,6 +41,7 @@ module execution_buffer #(parameter L = 8)
 typedef struct packed
 {
     logic valid;
+    logic [$clog2(`ROB_SIZE)-1:0] rob_addr;
     nand_cpu_pkg::AluOp alu_op;
     logic [5:0] immdt;
     logic use_ra;
@@ -72,7 +78,11 @@ always_comb begin
             open_addr = i;
         end
     end
-    out.valid = ready;
+    full = ~open;
+    out.valid = (ready & ~rob_cp.restore) | ((rob_cp.tail > rob_head)?
+                ((buffer[i].rob_addr < flush.tail) & (buffer[i].rob_addr >= rob_head)) :
+                ((buffer[i].rob_addr < flush.tail) | (buffer[i].rob_addr >= rob_head)));
+    out.rob_addr = buffer[ready_addr].rob_addr;
     out.alu_op = buffer[ready_addr].alu_op;
     out.immdt = buffer[ready_addr].immdt;
     out.ra_addr = buffer[ready_addr].ra_addr;
@@ -87,6 +97,28 @@ always_ff @(posedge clk) begin
         buffer <= '{default:'0};
     end
     else begin
+        if(~ctrl.reject & in.valid) begin
+            buffer[open_addr].valid <= 1'b1;
+            buffer[open_addr].rob_addr <= in.rob_addr;
+            buffer[open_addr].alu_op <= in.alu_op;
+            buffer[open_addr].immdt <= in.immdt;
+            buffer[open_addr].ra_addr <= in.ra_addr;
+            buffer[open_addr].use_rt <= in.use_rt;
+            buffer[open_addr].rt_addr <= in.rt_addr;
+            buffer[open_addr].rw_addr <= in.rw_addr;
+            buffer[open_addr].rs_addr <= in.rs_addr;
+        end
+        if(~ctrl.retain & ready) begin
+            buffer[ready_addr].valid <= 1'b0;
+        end
+
+        if(rob_cp.restore) begin
+            for(int i = 0; i < L; i++) begin
+                buffer[i].valid <= buffer[i].valid & ((rob_cp.tail > rob_head)?
+                    ((buffer[i].rob_addr < flush.tail) & (buffer[i].rob_addr >= rob_head)) :
+                    ((buffer[i].rob_addr < flush.tail) | (buffer[i].rob_addr >= rob_head)));
+            end
+        end
     end
 end
 endmodule

@@ -2,7 +2,7 @@
 
 interface branch_buffer_ifc;
 logic valid;
-logic rob_addr;
+logic [$clog2(`ROB_SIZE)-1:0] rob_addr;
 logic jump;
 logic predict_taken;
 logic [`PC_SIZE-1:0] pc;
@@ -31,6 +31,11 @@ module branch_buffer #(parameter L = 8)
     input logic clk,
     input logic n_rst,
 
+    buffer_ctrl_ifc.in ctrl,
+    rob_checkpoint.in rob_cp,
+    input logic [$clog2(`ROB_SIZE)-1:0] rob_head,
+    output logic full,
+
     input logic r_calculated_list [`NUM_D_REG],
     input logic s_calculated_list [`NUM_S_REG],
 
@@ -41,7 +46,7 @@ module branch_buffer #(parameter L = 8)
 typedef struct packed
 {
     logic valid;
-    logic rob_addr;
+    logic [$clog2(`ROB_SIZE)-1:0] rob_addr;
     logic jump;
     logic predict_taken;
     logic [`PC_SIZE-1:0] pc;
@@ -55,10 +60,10 @@ typedef struct packed
 } eb_entry;
 
 eb_entry buffer [L];
-logic ready;
-logic [$clog2(L)-1:0] ready_addr;
 logic open;
 logic [$clog2(L)-1:0] open_addr;
+logic ready;
+logic [$clog2(L)-1:0] ready_addr;
 
 always_comb begin
     ready = 1'b0;
@@ -76,6 +81,7 @@ always_comb begin
             open_addr = i;
         end
     end
+    full = ~open;
     out.valid = ready;
     out.rob_addr = buffer[ready_addr].rob_addr;
     out.jump = buffer[ready_addr].jump;
@@ -92,6 +98,28 @@ always_ff @(posedge clk) begin
         buffer <= '{default:'0};
     end
     else begin
+        if(~ctrl.reject & in.valid) begin
+            buffer[open_addr].valid <= 1'b1;
+            buffer[open_addr].rob_addr <= in.rob_addr;
+            buffer[open_addr].jump <= in.jump;
+            buffer[open_addr].predict_taken <= in.predict_taken;
+            buffer[open_addr].pc <= in.pc;
+            buffer[open_addr].predict_target <= in.predict_target;
+            buffer[open_addr].rt_addr <= in.rt_addr;
+            buffer[open_addr].rw_addr <= in.rw_addr;
+            buffer[open_addr].rs_addr <= in.rs_addr;
+        end
+        if(~ctrl.retain & ready) begin
+            buffer[ready_addr].valid <= 1'b0;
+        end
+
+        if(rob_cp.restore) begin
+            for(int i = 0; i < L; i++) begin
+                buffer[i].valid <= buffer[i].valid & ((rob_cp.tail > rob_head)?
+                    ((buffer[i].rob_addr < flush.tail) & (buffer[i].rob_addr >= rob_head)) :
+                    ((buffer[i].rob_addr < flush.tail) | (buffer[i].rob_addr >= rob_head)));
+            end
+        end
     end
 end
 endmodule
