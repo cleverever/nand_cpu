@@ -1,28 +1,5 @@
 `include "nand_cpu.svh"
 
-interface valid_rob_range_ifc;
-logic unsigned [$clog2(`ROB_LENGTH)-1:0] high;
-logic unsigned [$clog2(`ROB_LENGTH)-1:0] low;
-logic unsigned rob_empty;
-
-function automatic logic check_valid(logic unsigned [$clog2(`ROB_LENGTH)-1:0] rob_addr);
-    if(high > low) begin
-        return (rob_addr < high) & (rob_addr >= low);
-    end
-    else if(high == low) begin
-        return ~rob_empty;
-    end
-    else begin
-        return (rob_addr >= low) | (rob_addr < high);
-    end
-endfunction
-
-modport in
-(
-    input high, low, rob_empty
-);
-endinterface
-
 interface reorder_buffer_ifc;
 logic return_r;
 logic [$clog2(`NUM_D_REG)-1:0] r_addr;
