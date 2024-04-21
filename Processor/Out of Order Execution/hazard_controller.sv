@@ -75,6 +75,20 @@ modport out
 );
 endinterface
 
+interface buffer_ctrl_ifc;
+logic reject;
+logic retain;
+
+modport in
+(
+    input reject, retain
+);
+modport out
+(
+    output reject, retain
+);
+endinterface
+
 interface fetch_ctrl_ifc;
 logic halt;
 logic stall;
@@ -97,10 +111,16 @@ module hazard_controller
 (
     input logic valid_feedback,
     branch_feedback_ifc.in branch_feedback_in,
+
+    input logic frl_empty,
     input logic rob_full,
 
     branch_hazard.in dec_branch_hazard,
     branch_hazard.in br_branch_hazard,
+
+    frl_checkpoint.out frl_cp,
+    tt_checkpoint.out tt_cp,
+    rob_checkpoint.out rob_cp,
 
     branch_feedback_ifc.out branch_feedback_out,
 
@@ -109,9 +129,19 @@ module hazard_controller
 
     output logic d_flush,
 
-    frl_checkpoint.out frl_cp,
-    tt_checkpoint.out tt_cp,
-    rob_checkpoint.out rob_cp
+    output logic d_mem_stall,
+
+    input logic ex_b_full,
+    buffer_ctrl_ifc.out ex_bc
+
+    input logic br_b_full,
+    buffer_ctrl_ifc.out br_bc
+
+    input logic st_b_full,
+    buffer_ctrl_ifc.out st_bc
+
+    input logic ld_b_full,
+    buffer_ctrl_ifc.out ld_bc
 );
 
 always_comb begin
@@ -135,5 +165,19 @@ always_comb begin
     else begin
         fetch_ctrl_ifc.pc_override = 1'b0;
     end
+
+    
+
+    ex_bc.reject = ex_b_full | rob_full | frl_empty | br_branch_hazard.mispredict;
+    ex_bc.retain = 1'b0;
+
+    br_bc.reject = br_b_full | rob_full | frl_empty | br_branch_hazard.mispredict;
+    br_bc.retain = 1'b0;
+
+    st_bc.reject = st_b_full | rob_full | frl_empty | br_branch_hazard.mispredict;
+    st_bc.retain = TODO;
+
+    ld_bc.reject = ld_b_full | rob_full | frl_empty | br_branch_hazard.mispredict;
+    ld_bc.retain = TODO;
 end
 endmodule
