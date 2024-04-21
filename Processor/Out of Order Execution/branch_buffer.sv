@@ -69,9 +69,11 @@ always_comb begin
     ready = 1'b0;
     open = 1'b0;
     for(int i = L-1; i >= 0; i--) begin
+        //Set the entry to ready if it is valid and all required operands have been calculated.
         buffer[i].rt_ready = r_calculated_list[buffer[i].rt_addr];
         buffer[i].rs_ready = s_calculated_list[buffer[i].rs_addr];
         buffer[i].ready = buffer[i].valid & buffer[i].rt_ready & (buffer[i].jump | buffer[i].rs_ready);
+
         if(buffer[i].ready) begin
             ready = 1'b1;
             ready_addr = i;
@@ -82,7 +84,13 @@ always_comb begin
         end
     end
     full = ~open;
-    out.valid = ready;
+
+    //The output is valid if it is ready. In the event of a branch mispredict,
+    //the rob address must be validated as well.
+    out.valid = ready & (~rob_cp.restore | ((rob_cp.tail > rob_head)?
+        ((buffer[i].rob_addr < flush.tail) & (buffer[i].rob_addr >= rob_head)) :
+        ((buffer[i].rob_addr < flush.tail) | (buffer[i].rob_addr >= rob_head))));
+
     out.rob_addr = buffer[ready_addr].rob_addr;
     out.jump = buffer[ready_addr].jump;
     out.predict_taken = buffer[ready_addr].predict_taken;
@@ -113,6 +121,7 @@ always_ff @(posedge clk) begin
             buffer[ready_addr].valid <= 1'b0;
         end
 
+        //If a branch is mispredicted, entries created after the branch must be flushed.
         if(rob_cp.restore) begin
             for(int i = 0; i < L; i++) begin
                 buffer[i].valid <= buffer[i].valid & ((rob_cp.tail > rob_head)?
