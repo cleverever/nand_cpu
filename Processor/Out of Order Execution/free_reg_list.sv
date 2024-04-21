@@ -26,8 +26,9 @@ module free_reg_list
     reorder_buffer_ifc.in commit,
     frl_checkpoint.in checkpoint,
 
-    output logic empty
     free_reg_list_ifc.out frl_out,
+
+    output logic empty
 );
 
 logic checkout_rw;
@@ -58,10 +59,7 @@ always_comb begin
             s_addr = i;
         end
     end
-    checkout_rw = valid & decoder_in.use_rw;
-    checkout_rs = valid & decoder_in.use_rs;
-    empty = (checkout_rw & ~r_available) | (checkout_rs & ~s_available);
-    
+
     //On a commit, the returned register will be used immediately.
     frl_out.rw_addr = r_addr;
     frl_out.rs_addr = s_addr;
@@ -73,6 +71,9 @@ always_comb begin
         s_available = 1'b1;
         frl_out.rs_addr = commit.s_addr;
     end
+    checkout_rw = valid & decoder_in.use_rw;
+    checkout_rs = valid & decoder_in.use_rs;
+    empty = (checkout_rw & ~r_available) | (checkout_rs & ~s_available);
 end
 
 always_ff @(posedge clk) begin
