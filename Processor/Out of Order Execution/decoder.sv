@@ -1,9 +1,9 @@
 `include "nand_cpu.svh"
 
-typedef enum {EX, MEM, BR} PIPELINE;
+typedef enum {EX, ST, LD, BR} BUFFER;
 
 interface decoder_ifc;
-PIPELINE pipeline;
+BUFFER buffer_sel;
 logic use_ra;
 
 logic use_rt;
@@ -61,7 +61,7 @@ always_comb begin
     port.halt = 1'b0;
     priority casez(instr)
         8'b00000000 : begin //CL
-            port.pipeline = EX;
+            port.buffer_sel = EX;
             port.use_ra = 1'b0;
             port.use_rt = 1'b0;
             port.use_rw = 1'b1;
@@ -69,7 +69,7 @@ always_comb begin
             port.alu_op = ALU_CL;
         end
         8'b0000???? : begin //CP
-            port.pipeline = EX;
+            port.buffer_sel = EX;
             port.use_ra = 1'b1;
             port.use_rt = 1'b0;
             port.use_rw = 1'b1;
@@ -78,7 +78,7 @@ always_comb begin
             port.alu_op = ALU_CP;
         end
         8'b0001???? : begin //NND
-            port.pipeline = EX;
+            port.buffer_sel = EX;
             port.use_ra = 1'b1;
             port.use_rt = 1'b1;
             port.use_rw = 1'b1;
@@ -86,7 +86,7 @@ always_comb begin
             port.alu_op = ALU_NAND;
         end
         8'b0010???? : begin //LS
-            port.pipeline = EX;
+            port.buffer_sel = EX;
             port.use_ra = 1'b1;
             port.use_rt = 1'b1;
             port.use_rw = 1'b1;
@@ -94,7 +94,7 @@ always_comb begin
             port.alu_op = ALU_LS;
         end
         8'b0011???? : begin //RS
-            port.pipeline = EX;
+            port.buffer_sel = EX;
             port.use_ra = 1'b1;
             port.use_rt = 1'b1;
             port.use_rw = 1'b1;
@@ -102,7 +102,7 @@ always_comb begin
             port.alu_op = ALU_RS;
         end
         8'b0100???? : begin //EQ
-            port.pipeline = EX;
+            port.buffer_sel = EX;
             port.use_ra = 1'b1;
             port.use_rt = 1'b1;
             port.use_rw = 1'b0;
@@ -111,7 +111,7 @@ always_comb begin
             port.alu_op = ALU_EQ;
         end
         8'b0101???? : begin //NE
-            port.pipeline = EX;
+            port.buffer_sel = EX;
             port.use_ra = 1'b1;
             port.use_rt = 1'b1;
             port.use_rw = 1'b0;
@@ -120,7 +120,7 @@ always_comb begin
             port.alu_op = ALU_NE;
         end
         8'b0110???? : begin //BR
-            port.pipeline = BR;
+            port.buffer_sel = BR;
             port.use_ra = 1'b0;
             port.use_rt = 1'b1;
             port.use_rw = 1'b0;
@@ -128,7 +128,7 @@ always_comb begin
             port.branch = 1'b1;
         end
         8'b0111???? : begin //JRL
-            port.pipeline = BR;
+            port.buffer_sel = BR;
             port.use_ra = 1'b0;
             port.use_rt = 1'b1;
             port.use_rw = 1'b1;
@@ -137,7 +137,7 @@ always_comb begin
             port.jump = 1'b1;
         end
         8'b10?????? : begin //LI
-            port.pipeline = EX;
+            port.buffer_sel = EX;
             port.use_ra = 1'b1;
             port.use_rt = 1'b0;
             port.use_rw = 1'b1;
@@ -145,7 +145,7 @@ always_comb begin
             port.alu_op = ALU_LI;
         end
         8'b1100???? : begin //LD
-            port.pipeline = MEM;
+            port.buffer_sel = LD;
             port.use_ra = 1'b0;
             port.use_rt = 1'b1;
             port.use_rw = 1'b1;
@@ -154,7 +154,7 @@ always_comb begin
             port.mem_op = MEM_READ;
         end
         8'b1101???? : begin //ST
-            port.pipeline = MEM;
+            port.buffer_sel = ST;
             port.use_ra = 1'b1;
             port.use_rt = 1'b1;
             port.use_rw = 1'b0;
@@ -163,7 +163,7 @@ always_comb begin
             port.mem_op = MEM_WRITE;
         end
         8'b1110???? : begin //INT
-            port.pipeline = BR;
+            port.buffer_sel = BR;
             port.use_ra = 1'b0;
             port.use_rt = 1'b0;
             port.use_rw = 1'b0;
@@ -171,7 +171,6 @@ always_comb begin
             port.interrupt = 1'b1;
         end
         8'b1111???? : begin //HLT
-            port.pipeline = EX;
             port.use_ra = 1'b0;
             port.use_rt = 1'b0;
             port.use_rw = 1'b0;
