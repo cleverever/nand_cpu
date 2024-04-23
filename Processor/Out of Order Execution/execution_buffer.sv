@@ -2,7 +2,7 @@
 
 interface execution_buffer_ifc;
 logic valid;
-logic [$clog2(`ROB_SIZE)-1:0] rob_addr;
+logic [$clog2(`ROB_LENGTH)-1:0] rob_addr;
 nand_cpu_pkg::AluOp alu_op;
 logic [5:0] immdt;
 logic [$clog2(`NUM_D_REG)-1:0] ra_addr;
@@ -29,7 +29,7 @@ module execution_buffer #(parameter L = 8)
 
     buffer_ctrl_ifc.in ctrl,
     rob_checkpoint.in rob_cp,
-    input logic [$clog2(`ROB_SIZE)-1:0] rob_head,
+    input logic [$clog2(`ROB_LENGTH)-1:0] rob_head,
     output logic full,
 
     input logic r_calculated_list [`NUM_D_REG],
@@ -41,7 +41,7 @@ module execution_buffer #(parameter L = 8)
 typedef struct packed
 {
     logic valid;
-    logic [$clog2(`ROB_SIZE)-1:0] rob_addr;
+    logic [$clog2(`ROB_LENGTH)-1:0] rob_addr;
     nand_cpu_pkg::AluOp alu_op;
     logic [5:0] immdt;
     logic use_ra;
@@ -85,8 +85,8 @@ always_comb begin
     //The output is valid if it is ready. In the event of a branch mispredict,
     //the rob address must be validated as well.
     out.valid = ready & (~rob_cp.restore | ((rob_cp.tail > rob_head)?
-        ((buffer[i].rob_addr < flush.tail) & (buffer[i].rob_addr >= rob_head)) :
-        ((buffer[i].rob_addr < flush.tail) | (buffer[i].rob_addr >= rob_head))));
+        ((buffer[ready_addr].rob_addr < flush.tail) & (buffer[ready_addr].rob_addr >= rob_head)) :
+        ((buffer[ready_addr].rob_addr < flush.tail) | (buffer[ready_addr].rob_addr >= rob_head))));
     
     out.rob_addr = buffer[ready_addr].rob_addr;
     out.alu_op = buffer[ready_addr].alu_op;

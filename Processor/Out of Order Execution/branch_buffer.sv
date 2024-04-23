@@ -2,7 +2,7 @@
 
 interface branch_buffer_ifc;
 logic valid;
-logic [$clog2(`ROB_SIZE)-1:0] rob_addr;
+logic [$clog2(`ROB_LENGTH)-1:0] rob_addr;
 logic jump;
 logic predict_taken;
 logic [`PC_SIZE-1:0] pc;
@@ -15,6 +15,7 @@ logic r_free_list_cp [`NUM_D_REG];
 logic s_free_list_cp [`NUM_S_REG];
 logic [$clog2(`NUM_D_REG)-1:0] d_translation_cp [16];
 logic [$clog2(`NUM_S_REG)-1:0] s_translation_cp;
+logic [$clog2(`ST_B_LENGTH)-1:0] sb_tail_cp;
 
 modport in
 (
@@ -33,7 +34,7 @@ module branch_buffer #(parameter L = 8)
 
     buffer_ctrl_ifc.in ctrl,
     rob_checkpoint.in rob_cp,
-    input logic [$clog2(`ROB_SIZE)-1:0] rob_head,
+    input logic [$clog2(`ROB_LENGTH)-1:0] rob_head,
     output logic full,
 
     input logic r_calculated_list [`NUM_D_REG],
@@ -46,7 +47,7 @@ module branch_buffer #(parameter L = 8)
 typedef struct packed
 {
     logic valid;
-    logic [$clog2(`ROB_SIZE)-1:0] rob_addr;
+    logic [$clog2(`ROB_LENGTH)-1:0] rob_addr;
     logic jump;
     logic predict_taken;
     logic [`PC_SIZE-1:0] pc;
@@ -88,8 +89,8 @@ always_comb begin
     //The output is valid if it is ready. In the event of a branch mispredict,
     //the rob address must be validated as well.
     out.valid = ready & (~rob_cp.restore | ((rob_cp.tail > rob_head)?
-        ((buffer[i].rob_addr < flush.tail) & (buffer[i].rob_addr >= rob_head)) :
-        ((buffer[i].rob_addr < flush.tail) | (buffer[i].rob_addr >= rob_head))));
+        ((buffer[ready_addr].rob_addr < flush.tail) & (buffer[ready_addr].rob_addr >= rob_head)) :
+        ((buffer[ready_addr].rob_addr < flush.tail) | (buffer[ready_addr].rob_addr >= rob_head))));
 
     out.rob_addr = buffer[ready_addr].rob_addr;
     out.jump = buffer[ready_addr].jump;
