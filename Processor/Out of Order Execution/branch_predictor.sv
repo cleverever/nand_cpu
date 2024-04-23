@@ -12,13 +12,13 @@ logic [`PC_SIZE-1:0] pc;
 logic branch;
 
 modport in
-{
+(
     input valid, pc, branch
-};
+);
 modport out
-{
+(
     output valid, pc, branch
-};
+);
 endinterface
 
 interface branch_outcome_ifc;
