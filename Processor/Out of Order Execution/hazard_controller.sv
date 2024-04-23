@@ -1,5 +1,19 @@
 `include "nand_cpu.svh"
 
+interface sb_checkpoint;
+logic restore;
+logic [$clog2(`ST_B_LENGTH)-1:0] tail;
+
+modport in
+(
+    input restore, tail
+);
+modport out
+(
+    output restore, tail
+);
+endinterface
+
 interface frl_checkpoint;
 logic restore;
 logic r_free_list [`NUM_D_REG];
@@ -75,6 +89,20 @@ modport out
 );
 endinterface
 
+interface pipeline_ctrl_ifc;
+logic reject;
+logic retain;
+
+modport in
+(
+    input reject, retain
+);
+modport out
+(
+    output reject, retain
+);
+endinterface
+
 interface buffer_ctrl_ifc;
 logic reject;
 logic retain;
@@ -124,31 +152,36 @@ module hazard_controller
 
     branch_feedback_ifc.out branch_feedback_out,
 
-    output logic i_stall,
-    output logic i_flush,
+    input logic speculative_halt,
 
-    output logic d_flush,
+    decoder_ifc.in decoder_in,
+
+    pipeline_ctrl_ifc.out i2d_ctrl,
+    pipeline_ctrl_ifc.out m_r2a_ctrl,
 
     output logic d_mem_stall,
 
     input logic ex_b_full,
-    buffer_ctrl_ifc.out ex_bc
+    buffer_ctrl_ifc.out ex_bc,
 
     input logic br_b_full,
-    buffer_ctrl_ifc.out br_bc
+    buffer_ctrl_ifc.out br_bc,
+
+    input logic cache_miss,
 
     input logic st_b_full,
-    buffer_ctrl_ifc.out st_bc
+    buffer_ctrl_ifc.out st_bc,
 
     input logic ld_b_full,
     buffer_ctrl_ifc.out ld_bc
 );
 
+logic buffer_full;
+
 always_comb begin
     if(br_branch_hazard.mispredict) begin
         fetch_ctrl_ifc.pc_override = 1'b1;
         fetch_ctrl_ifc.target = br_branch_hazard.recovery_pc;
-        i2d_flush = 1'b1;
 
         frl_cp.TODO;
 
@@ -160,13 +193,20 @@ always_comb begin
     else if(dec_branch_hazard.mispredict) begin
         fetch_ctrl_ifc.pc_override = 1'b1;
         fetch_ctrl_ifc.target = dec_branch_hazard.recovery_pc;
-        i2d_flush = 1'b1;
     end
     else begin
         fetch_ctrl_ifc.pc_override = 1'b0;
     end
 
-    
+    i2d_ctrl.reject = br_branch_hazard.mispredict | dec_branch_hazard.mispredict;
+    i2d_ctrl.retain = br_branch_hazard.mispredict | 
+        ((decoder_in.buffer_sel == EX) & ex_bc.reject) |
+        ((decoder_in.buffer_sel == BR) & br_bc.reject) |
+        ((decoder_in.buffer_sel == ST) & st_bc.reject) |
+        ((decoder_in.buffer_sel == LD) & ld_bc.reject);
+
+    m_r2a_ctrl.reject = TODO;
+    m_r2a_ctrl.retain = cache_miss;
 
     ex_bc.reject = ex_b_full | rob_full | frl_empty | br_branch_hazard.mispredict;
     ex_bc.retain = 1'b0;
@@ -175,9 +215,9 @@ always_comb begin
     br_bc.retain = 1'b0;
 
     st_bc.reject = st_b_full | rob_full | frl_empty | br_branch_hazard.mispredict;
-    st_bc.retain = TODO;
+    st_bc.retain = cache_miss;
 
     ld_bc.reject = ld_b_full | rob_full | frl_empty | br_branch_hazard.mispredict;
-    ld_bc.retain = TODO;
+    ld_bc.retain = cache_miss;
 end
 endmodule
