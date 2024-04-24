@@ -39,7 +39,10 @@ module reorder_buffer
     valid_rob_range_ifc.out active_range,
 
     output logic rob_full,
-    output logic [$clog2(`ROB_SIZE)-1:0] rob_open_slot
+    output logic [$clog2(`ROB_LENGTH)-1:0] rob_open_slot,
+
+    output logic speculative_halt,
+    output logic commit_halt
 );
 
 typedef struct packed
@@ -49,13 +52,14 @@ typedef struct packed
     logic [$clog2(`NUM_D_REG)-1:0] prev_r_addr;
     logic write_s;
     logic [$clog2(`NUM_S_REG)-1:0] prev_s_addr;
+    logic halt;
 }
 rob_entry;
 
 rob_entry buffer [`ROB_LENGTH];
 logic unsigned [$clog2(`ROB_LENGTH)-1:0] tail;
 logic unsigned [$clog2(`ROB_LENGTH)-1:0] head;
-logic unsigned [$clog2(`ROB_LENGTH+1)-1:0] count;
+logic unsigned [$clog2(`ROB_LENGTH)-1:0] count;
 
 always_comb begin
     active_range.high = tail;
@@ -65,6 +69,13 @@ always_comb begin
 
     rob_full = (count == `ROB_LENGTH - 1);
     rob_open_slot = tail;
+
+    speculative_halt = 1'b0;
+    for(int i = 0; i < `ROB_LENGTH; i++) begin
+        if(buffer[i].halt) begin
+            speculative_halt = 1'b1;
+        end
+    end
 end
 
 always_ff @(posedge clk) begin
@@ -73,7 +84,6 @@ always_ff @(posedge clk) begin
         head <= 0;
     end
     else begin
-
         //Commits an instruction at the front of the queue if it is done. Will return
         //the previously used physical register if its logical register was overwritten.
         //Since instructions commit in order, we can be sure that it is safe to return the
@@ -84,6 +94,7 @@ always_ff @(posedge clk) begin
             commit.r_addr <= buffer[head].prev_r_addr;
             commit.return_s <= buffer[head].write_s;
             commit.s_addr <= buffer[head].prev_s_addr;
+            commit_halt <= buffer[head].halt;
         end
         else begin
             commit.return_r <= 1'b0;
@@ -101,11 +112,10 @@ always_ff @(posedge clk) begin
             tail <= (tail + 1) % `ROB_LENGTH;
             buffer[tail].done <= 1'b0;
             buffer[tail].write_r <= decoder_in.use_rw;
-            buffer[tail].new_rw_addr <= frl_in.rw_addr;
             buffer[tail].prev_r_addr <= tt_in.p_rw_addr;
             buffer[tail].write_s <= decoder_in.use_rs;
-            buffer[tail].new_rs_addr <= frl_in.rs_addr;
             buffer[tail].prev_s_addr <= tt_in.p_rs_addr;
+            buffer[tail].halt <= decoder_in.halt;
         end
     end
 
