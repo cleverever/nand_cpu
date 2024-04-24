@@ -66,7 +66,7 @@ always_comb begin
         buffer[i].ready = buffer[i].ra_ready & buffer[i].rt_ready;
     end
 
-    out.valid = buffer[head].ready & (count > 0);
+    out.valid = buffer[head].ready & (count > 0) & ~ctrl.retain & (~checkpoint.restore | (checkpoint.tail != head));
     out.rob_addr = buffer[head].rob_addr;
     out.ra_addr = buffer[head].ra_addr;
     out.rt_addr = buffer[head].rt_addr;
