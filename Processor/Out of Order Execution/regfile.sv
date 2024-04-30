@@ -1,38 +1,34 @@
 `include "nand_cpu.svh"
 
-interface regfile_ex_ifc;
-logic [$clog2(`NUM_D_REG)-1:0] ra_addr;
-logic [15:0] ra_data;
-logic [$clog2(`NUM_D_REG)-1:0] rt_addr;
-logic [15:0] rt_data;
+interface regfile_d_read_ifc;
+logic [$clog2(`NUM_D_REG)-1:0] addr;
+logic [15:0] data;
 
+modport read
+(
+    input data,
+    output addr
+);
 modport rf
 (
-    input ra_addr, rt_addr,
-    output ra_data, rt_data
-);
-modport ex
-(
-    input ra_data, rt_data,
-    output ra_addr, rt_addr
+    input addr,
+    output data
 );
 endinterface
 
-interface regfile_br_ifc;
-logic [$clog2(`NUM_D_REG)-1:0] rt_addr;
-logic [15:0] rt_data;
-logic [$clog2(`NUM_S_REG)-1:0] rs_addr;
-logic rs_data;
+interface regfile_s_read_ifc;
+logic [$clog2(`NUM_S_REG)-1:0] addr;
+logic data;
 
+modport read
+(
+    input data,
+    output addr
+);
 modport rf
 (
-    input rt_addr, rs_addr,
-    output rt_data, rs_data
-);
-modport br
-(
-    input rt_data, rs_data,
-    output rt_addr, rs_addr
+    input addr,
+    output data
 );
 endinterface
 
@@ -71,12 +67,18 @@ module regfile
     input logic clk,
     input logic n_rst,
 
-    regfile_ex_ifc.rf ex_read_request,
-    regfile_br_ifc.rf br_read_request,
+    regfile_d_read_ifc.rf ex_ra_request,
+    regfile_d_read_ifc.rf ex_rt_request,
+    regfile_d_write_ifc.rf ex_rw_request,
+    regfile_s_write_ifc.rf ex_rs_request,
 
-    regfile_d_write_ifc.rf ex_d_write_request,
-    regfile_s_write_ifc.rf ex_s_write_request,
-    regfile_d_write_ifc.rf br_d_write_request
+    regfile_d_read_ifc.rf br_rt_request,
+    regfile_s_read_ifc.rf br_rs_request,
+    regfile_d_write_ifc.rf br_rw_request,
+
+    regfile_d_read_ifc.rf mem_ra_request,
+    regfile_d_read_ifc.rf mem_rt_request,
+    regfile_d_write_ifc.rf mem_rw_request
 );
 
 logic [15:0] data_regs [`NUM_D_REG];

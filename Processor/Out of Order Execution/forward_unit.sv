@@ -5,8 +5,20 @@ module forward_unit
     input logic clk,
     input logic n_rst,
 
-    regfile_ex_ifc.rf ex_reg_req_in,
-    regfile_ex_ifc.ex ex_reg_req_out,
+    regfile_d_read_ifc.rf ex_ra_request_in,
+    regfile_d_read_ifc.read ex_ra_request_out,
+    regfile_d_read_ifc.rf ex_rt_request_in,
+    regfile_d_read_ifc.read ex_rt_request_out,
+
+    regfile_d_read_ifc.rf br_rt_request_in,
+    regfile_d_read_ifc.read br_rt_request_out,
+    regfile_s_read_ifc.rf br_rs_request_in,
+    regfile_s_read_ifc.read br_rs_request_out,
+
+    regfile_d_read_ifc.rf mem_ra_request_in,
+    regfile_d_read_ifc.read mem_ra_request_out,
+    regfile_d_read_ifc.rf mem_rt_request_in,
+    regfile_d_read_ifc.read mem_rt_request_out,
 
     regfile_d_write_ifc.rf e_a_dfw,
     regfile_s_write_ifc.rf e_a_sfw,
@@ -21,10 +33,20 @@ module forward_unit
 );
 
 always_comb begin
-    ex_reg_req_out.ra_addr = ex_reg_req_in.ra_addr;
-    ex_reg_req_in.ra_data = check_d_fw(ex_reg_req_in.ra_addr, ex_reg_req_out.ra_data);
-    ex_reg_req_out.rt_addr = ex_reg_req_in.rt_addr;
-    ex_reg_req_in.rt_data = check_d_fw(ex_reg_req_in.rt_addr, ex_reg_req_out.rt_data);
+    ex_ra_request_out.addr = ex_ra_request_in.addr;
+    ex_ra_request_in.data = check_d_fw(ex_ra_request_in.addr, ex_ra_request_out.data);
+    ex_rt_request_out.addr = ex_rt_request_in.addr;
+    ex_rt_request_in.data = check_d_fw(ex_rt_request_in.addr, ex_rt_request_out.data);
+
+    br_rt_request_out.addr = br_rt_request_in.addr;
+    br_rt_request_in.data = check_d_fw(br_rt_request_in.addr, br_rt_request_out.data);
+    br_rs_request_out.addr = br_rs_request_in.addr;
+    br_rs_request_in.data = check_s_fw(br_rs_request_in.addr, br_rs_request_out.data);
+
+    mem_ra_request_out.addr = mem_ra_request_in.addr;
+    mem_ra_request_in.data = check_d_fw(mem_ra_request_in.addr, mem_ra_request_out.data);
+    mem_rt_request_out.addr = mem_rt_request_in.addr;
+    mem_rt_request_in.data = check_d_fw(mem_rt_request_in.addr, mem_rt_request_out.data);
 end
 
 function automatic logic [15:0] check_d_fw(logic [$clog2(`NUM_D_REG)-1:0] addr, logic [15:0] data);
